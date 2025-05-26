@@ -19,7 +19,8 @@ public interface IntakeMapper {
 
     @Mappings({
             @Mapping(target = "nutriments", source = "nutriments"),
-            @Mapping(target = "foodName", source = "productName")
+            @Mapping(target = "foodName", source = "productName"),
+            @Mapping(target = "id", ignore = true)
     })
     void updateIntakeFromFoodDto(@MappingTarget Intake intake, FoodDto food);
 }
