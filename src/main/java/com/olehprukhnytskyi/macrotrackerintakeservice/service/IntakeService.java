@@ -15,4 +15,6 @@ public interface IntakeService {
     IntakeResponseDto update(Long id, UpdateIntakeRequestDto intakeRequest, Long userId);
 
     void deleteById(Long id, Long userId);
+
+    void deleteAllByUserId(Long userId);
 }

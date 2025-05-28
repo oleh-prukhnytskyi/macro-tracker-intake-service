@@ -117,6 +117,12 @@ public class IntakeServiceImpl implements IntakeService {
         intakeRepository.deleteByIdAndUserId(id, userId);
     }
 
+    @Transactional
+    @Override
+    public void deleteAllByUserId(Long userId) {
+        intakeRepository.deleteAllByUserId(userId);
+    }
+
     private BigDecimal calculate(BigDecimal per100, int amount) {
         return per100.multiply(BigDecimal.valueOf(amount))
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);

@@ -17,4 +17,6 @@ public interface IntakeRepository extends JpaRepository<Intake, Long> {
     Optional<Intake> findByIdAndUserId(Long id, Long userId);
 
     void deleteByIdAndUserId(Long id, Long userId);
+
+    void deleteAllByUserId(Long userId);
 }
