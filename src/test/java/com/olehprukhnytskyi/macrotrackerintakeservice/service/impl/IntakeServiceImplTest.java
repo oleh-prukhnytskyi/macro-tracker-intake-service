@@ -13,6 +13,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.event.RequestProcessedEvent;
+import com.olehprukhnytskyi.macrotrackerintakeservice.exception.NotFoundException;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.IntakeRepository;
@@ -112,11 +113,10 @@ class IntakeServiceImplTest {
                 .NotFound("Not found", mock(Request.class), null, null));
 
         // When & Then
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        NotFoundException ex = assertThrows(NotFoundException.class,
                 () -> intakeService.save(requestDto, userId, requestId));
 
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-        assertEquals("Food not found", ex.getReason());
+        assertEquals("Food not found", ex.getMessage());
         verify(intakeRepository, never()).save(any());
     }
 

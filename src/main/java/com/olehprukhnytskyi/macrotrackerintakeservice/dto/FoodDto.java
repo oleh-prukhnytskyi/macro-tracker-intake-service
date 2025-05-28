@@ -16,5 +16,7 @@ public class FoodDto {
     private String genericName;
     private String imageUrl;
     private String brands;
-    private NutrimentsDto nutriments;
+
+    @Builder.Default
+    private NutrimentsDto nutriments = new NutrimentsDto();
 }

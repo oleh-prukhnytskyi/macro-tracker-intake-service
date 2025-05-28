@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
+import com.olehprukhnytskyi.macrotrackerintakeservice.dto.NutrimentsDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
@@ -75,10 +76,12 @@ class IntakeControllerTest {
         IntakeResponseDto responseDto = new IntakeResponseDto();
         responseDto.setId(1L);
         responseDto.setAmount(100);
+        responseDto.setNutriments(new NutrimentsDto());
         responseDto.setFoodName("Oatmeal");
 
         FoodDto foodDto = FoodDto.builder()
                 .productName("Oatmeal")
+                .nutriments(new NutrimentsDto())
                 .build();
 
         String jsonRequest = objectMapper.writeValueAsString(new IntakeRequestDto("food-1", 100));
@@ -102,9 +105,8 @@ class IntakeControllerTest {
         if (intakeResponseDto != null) {
             responseDto.setDate(intakeResponseDto.getDate());
         }
-        String expected = objectMapper.writeValueAsString(responseDto);
 
-        assertEquals(expected, mvcResult.getResponse().getContentAsString());
+        assertEquals(responseDto, intakeResponseDto);
         verify(intakeRepository).save(any(Intake.class));
         verify(redisTemplate.opsForValue()).set(anyString(), eq("1"), eq(1L), eq(TimeUnit.HOURS));
         verify(foodClientService).getFoodById("food-1");

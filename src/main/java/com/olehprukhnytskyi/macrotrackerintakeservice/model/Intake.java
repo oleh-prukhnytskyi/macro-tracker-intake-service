@@ -19,7 +19,7 @@ public class Intake {
     private String foodId;
 
     @Embedded
-    private Nutriments nutriments;
+    private Nutriments nutriments = new Nutriments();
     private String foodName;
 
     private LocalDate date = LocalDate.now();

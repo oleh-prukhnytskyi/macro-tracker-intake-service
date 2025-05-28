@@ -4,6 +4,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.config.MapperConfig;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
+import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -23,4 +24,6 @@ public interface IntakeMapper {
             @Mapping(target = "id", ignore = true)
     })
     void updateIntakeFromFoodDto(@MappingTarget Intake intake, FoodDto food);
+
+    void updateFromDto(@MappingTarget Intake intake, UpdateIntakeRequestDto dto);
 }
