@@ -8,13 +8,13 @@ import lombok.Data;
 @Data
 public class NutrimentsDto {
     @JsonSerialize(using = BigDecimalJsonSerializer.class)
-    private BigDecimal kcal = BigDecimal.ZERO;
+    private BigDecimal calories = BigDecimal.ZERO;
 
     @JsonSerialize(using = BigDecimalJsonSerializer.class)
     private BigDecimal fat = BigDecimal.ZERO;
 
     @JsonSerialize(using = BigDecimalJsonSerializer.class)
-    private BigDecimal proteins = BigDecimal.ZERO;
+    private BigDecimal protein = BigDecimal.ZERO;
 
     @JsonSerialize(using = BigDecimalJsonSerializer.class)
     private BigDecimal carbohydrates = BigDecimal.ZERO;

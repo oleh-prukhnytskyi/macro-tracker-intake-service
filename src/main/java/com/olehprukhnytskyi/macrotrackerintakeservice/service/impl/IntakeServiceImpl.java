@@ -50,15 +50,15 @@ public class IntakeServiceImpl implements IntakeService {
 
             int amount = intakeRequest.getAmount();
             Nutriments nutriments = new Nutriments(
-                    food.getNutriments().getKcal(),
+                    food.getNutriments().getCalories(),
                     food.getNutriments().getCarbohydrates(),
                     food.getNutriments().getFat(),
-                    food.getNutriments().getProteins(),
+                    food.getNutriments().getProtein(),
 
-                    calculate(food.getNutriments().getKcal(), amount),
+                    calculate(food.getNutriments().getCalories(), amount),
                     calculate(food.getNutriments().getCarbohydrates(), amount),
                     calculate(food.getNutriments().getFat(), amount),
-                    calculate(food.getNutriments().getProteins(), amount)
+                    calculate(food.getNutriments().getProtein(), amount)
             );
             intake.setNutriments(nutriments);
         } catch (FeignException.NotFound ex) {
@@ -102,10 +102,10 @@ public class IntakeServiceImpl implements IntakeService {
 
         if (oldAmount != newAmount) {
             Nutriments nutriments = intake.getNutriments();
-            nutriments.setKcal(calculate(nutriments.getKcalPer100(), newAmount));
+            nutriments.setCalories(calculate(nutriments.getCaloriesPer100(), newAmount));
             nutriments.setCarbohydrates(calculate(nutriments.getCarbohydratesPer100(), newAmount));
             nutriments.setFat(calculate(nutriments.getFatPer100(), newAmount));
-            nutriments.setProteins(calculate(nutriments.getProteinsPer100(), newAmount));
+            nutriments.setProtein(calculate(nutriments.getProteinPer100(), newAmount));
         }
         Intake saved = intakeRepository.save(intake);
         return intakeMapper.toDto(saved);
