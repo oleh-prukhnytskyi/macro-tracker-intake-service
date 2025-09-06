@@ -1,0 +1,48 @@
+[33m554806c[m[33m ([m[1;36mHEAD -> [m[1;32mdevelop[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33m554806c[m[33m ([m[1;36mHEAD -> [m[1;32mdevelop[m[33m)[m HEAD@{1}: reset: moving to HEAD
+[33m554806c[m[33m ([m[1;36mHEAD -> [m[1;32mdevelop[m[33m)[m HEAD@{2}: reset: moving to HEAD
+[33m554806c[m[33m ([m[1;36mHEAD -> [m[1;32mdevelop[m[33m)[m HEAD@{3}: checkout: moving from feature/import-user-intakes to develop
+[33m2957e20[m[33m ([m[1;32mfeature/import-user-intakes[m[33m)[m HEAD@{4}: commit: Add parsers
+[33m554806c[m[33m ([m[1;36mHEAD -> [m[1;32mdevelop[m[33m)[m HEAD@{5}: checkout: moving from develop to feature/import-user-intakes
+[33m554806c[m[33m ([m[1;36mHEAD -> [m[1;32mdevelop[m[33m)[m HEAD@{6}: commit: Refactor: Use PATCH to update intake
+[33m796c4b7[m[33m ([m[1;32mfeature/db-macros-columns-refactor[m[33m)[m HEAD@{7}: merge feature/db-macros-columns-refactor: Fast-forward
+[33m5601d5b[m[33m ([m[1;32mfeature/delete-user[m[33m)[m HEAD@{8}: checkout: moving from feature/db-macros-columns-refactor to develop
+[33m796c4b7[m[33m ([m[1;32mfeature/db-macros-columns-refactor[m[33m)[m HEAD@{9}: commit: Refactor nutriments columns
+[33m5601d5b[m[33m ([m[1;32mfeature/delete-user[m[33m)[m HEAD@{10}: Branch: renamed refs/heads/feature/db-calories-column-refactor to refs/heads/feature/db-macros-columns-refactor
+[33m5601d5b[m[33m ([m[1;32mfeature/delete-user[m[33m)[m HEAD@{12}: checkout: moving from develop to feature/db-calories-column-refactor
+[33m5601d5b[m[33m ([m[1;32mfeature/delete-user[m[33m)[m HEAD@{13}: merge feature/delete-user: Fast-forward
+[33m8c6029f[m[33m ([m[1;32mfeature/get-update-delete-intake[m[33m)[m HEAD@{14}: checkout: moving from feature/delete-user to develop
+[33m5601d5b[m[33m ([m[1;32mfeature/delete-user[m[33m)[m HEAD@{15}: commit: Add user delete
+[33m8c6029f[m[33m ([m[1;32mfeature/get-update-delete-intake[m[33m)[m HEAD@{16}: checkout: moving from develop to feature/delete-user
+[33m8c6029f[m[33m ([m[1;32mfeature/get-update-delete-intake[m[33m)[m HEAD@{17}: merge feature/get-update-delete-intake: Fast-forward
+[33m2c941bf[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m, [m[1;32mhotfix/add-intake-error[m[33m)[m HEAD@{18}: checkout: moving from feature/get-update-delete-intake to develop
+[33m8c6029f[m[33m ([m[1;32mfeature/get-update-delete-intake[m[33m)[m HEAD@{19}: commit: Add get, update, delete intake
+[33m2c941bf[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m, [m[1;32mhotfix/add-intake-error[m[33m)[m HEAD@{20}: checkout: moving from develop to feature/get-update-delete-intake
+[33m2c941bf[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m, [m[1;32mhotfix/add-intake-error[m[33m)[m HEAD@{21}: checkout: moving from main to develop
+[33m2c941bf[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m, [m[1;32mhotfix/add-intake-error[m[33m)[m HEAD@{22}: checkout: moving from develop to main
+[33m2c941bf[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m, [m[1;32mhotfix/add-intake-error[m[33m)[m HEAD@{23}: merge hotfix/add-intake-error: Fast-forward
+[33m0d48ebc[m[33m ([m[1;32mhotfix/food-service-url[m[33m)[m HEAD@{24}: checkout: moving from main to develop
+[33m2c941bf[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m, [m[1;32mhotfix/add-intake-error[m[33m)[m HEAD@{25}: merge hotfix/add-intake-error: Fast-forward
+[33m0d48ebc[m[33m ([m[1;32mhotfix/food-service-url[m[33m)[m HEAD@{26}: checkout: moving from hotfix/add-intake-error to main
+[33m2c941bf[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m, [m[1;32mhotfix/add-intake-error[m[33m)[m HEAD@{27}: commit: Fix: add intake error
+[33m0d48ebc[m[33m ([m[1;32mhotfix/food-service-url[m[33m)[m HEAD@{28}: checkout: moving from main to hotfix/add-intake-error
+[33m0d48ebc[m[33m ([m[1;32mhotfix/food-service-url[m[33m)[m HEAD@{29}: checkout: moving from develop to main
+[33m0d48ebc[m[33m ([m[1;32mhotfix/food-service-url[m[33m)[m HEAD@{30}: merge hotfix/food-service-url: Fast-forward
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{31}: checkout: moving from main to develop
+[33m0d48ebc[m[33m ([m[1;32mhotfix/food-service-url[m[33m)[m HEAD@{32}: merge hotfix/food-service-url: Fast-forward
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{33}: checkout: moving from hotfix/food-service-url to main
+[33m0d48ebc[m[33m ([m[1;32mhotfix/food-service-url[m[33m)[m HEAD@{34}: commit: Fix: food service url corrected
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{35}: checkout: moving from main to hotfix/food-service-url
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{36}: checkout: moving from develop to main
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{37}: checkout: moving from main to develop
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{38}: merge release/v1.0: Fast-forward
+[33m88cebec[m HEAD@{39}: checkout: moving from release/v1.0 to main
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{40}: checkout: moving from develop to release/v1.0
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{41}: merge feature/add-intake: Fast-forward
+[33m88cebec[m HEAD@{42}: checkout: moving from feature/add-intake to develop
+[33m14b2390[m[33m ([m[1;32mrelease/v1.0[m[33m, [m[1;32mfeature/add-intake[m[33m)[m HEAD@{43}: commit: Add record food to intake
+[33m88cebec[m HEAD@{44}: checkout: moving from develop to feature/add-intake
+[33m88cebec[m HEAD@{45}: checkout: moving from main to develop
+[33m88cebec[m HEAD@{46}: reset: moving to HEAD
+[33m88cebec[m HEAD@{47}: Branch: renamed refs/heads/master to refs/heads/main
+[33m88cebec[m HEAD@{49}: commit (initial): first commit

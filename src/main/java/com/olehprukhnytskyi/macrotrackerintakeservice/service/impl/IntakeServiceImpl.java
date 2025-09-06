@@ -115,6 +115,7 @@ public class IntakeServiceImpl implements IntakeService {
     @Override
     public void deleteById(Long id, Long userId) {
         intakeRepository.deleteByIdAndUserId(id, userId);
+        intakeRepository.flush();
     }
 
     @Transactional

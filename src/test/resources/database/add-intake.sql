@@ -1,0 +1,1 @@
+insert into intake (amount, food_id, food_name, user_id, date) values (10, '1', 'Potato', 1, '2025-09-06')
