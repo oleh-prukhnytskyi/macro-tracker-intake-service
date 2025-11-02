@@ -1,5 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.controller;
 
+import com.olehprukhnytskyi.macrotrackerintakeservice.dto.CacheablePage;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.PagedResponse;
@@ -13,7 +14,6 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -57,7 +57,8 @@ public class IntakeController {
             }
         }
 
-        Page<IntakeResponseDto> page = intakeService.findByDate(parsedDate, userId, pageable);
+        CacheablePage<IntakeResponseDto> page = intakeService
+                .findByDate(parsedDate, userId, pageable);
         PagedResponse<IntakeResponseDto> response = new PagedResponse<>(
                 page.getContent(),
                 new Pagination(

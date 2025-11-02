@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.olehprukhnytskyi.macrotrackerintakeservice.config.AbstractIntegrationTest;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.MediaType;
@@ -46,8 +46,7 @@ import org.springframework.web.server.ResponseStatusException;
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:database/remove-intake.sql",
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class IntakeControllerTest {
+class IntakeControllerTest extends AbstractIntegrationTest {
     protected static MockMvc mockMvc;
 
     @Autowired
@@ -212,7 +211,7 @@ class IntakeControllerTest {
                 .id(1L)
                 .amount(100)
                 .nutriments(new NutrimentsDto())
-                .date(LocalDate.parse("2025-09-06"))
+                .date(LocalDate.now())
                 .foodName("Oatmeal")
                 .build();
 

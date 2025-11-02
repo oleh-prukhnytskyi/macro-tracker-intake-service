@@ -1,5 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.service.impl;
 
+import com.olehprukhnytskyi.macrotrackerintakeservice.dto.CacheablePage;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
@@ -19,6 +20,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +40,10 @@ public class IntakeServiceImpl implements IntakeService {
     private final IntakeMapper intakeMapper;
     private final FoodClientService foodClientService;
 
+    @Caching(evict = {
+            @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
+            @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
+    })
     @Override
     @Transactional
     public IntakeResponseDto save(IntakeRequestDto intakeRequest,
@@ -77,8 +85,13 @@ public class IntakeServiceImpl implements IntakeService {
         return intakeMapper.toDto(saved);
     }
 
+    @Cacheable(
+            value = "user:intakes",
+            key = "'user:' + #userId + ( #date != null ? ':date:'"
+                    + " + #date.toString() : ':all' ) + ':page:' + #pageable.pageNumber"
+    )
     @Override
-    public Page<IntakeResponseDto> findByDate(LocalDate date, Long userId,
+    public CacheablePage<IntakeResponseDto> findByDate(LocalDate date, Long userId,
                                               Pageable pageable) {
         Page<Intake> intakes;
         if (date != null) {
@@ -86,9 +99,14 @@ public class IntakeServiceImpl implements IntakeService {
         } else {
             intakes = intakeRepository.findByUserId(userId, pageable);
         }
-        return intakes.map(intakeMapper::toDto);
+        Page<IntakeResponseDto> dtoPage = intakes.map(intakeMapper::toDto);
+        return CacheablePage.fromPage(dtoPage);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
+            @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
+    })
     @Override
     @Transactional
     public IntakeResponseDto update(Long id, UpdateIntakeRequestDto intakeRequest,
@@ -111,6 +129,10 @@ public class IntakeServiceImpl implements IntakeService {
         return intakeMapper.toDto(saved);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
+            @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
+    })
     @Transactional
     @Override
     public void deleteById(Long id, Long userId) {
@@ -118,6 +140,7 @@ public class IntakeServiceImpl implements IntakeService {
         intakeRepository.flush();
     }
 
+    @CacheEvict(value = "user:intakes", key = "'user:' + #userId", allEntries = true)
     @Transactional
     @Override
     public void deleteAllByUserId(Long userId) {
