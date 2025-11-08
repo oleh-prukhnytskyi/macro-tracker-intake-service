@@ -1,5 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,12 +11,21 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Food intake response with calculated nutrition")
 public class IntakeResponseDto {
+    @Schema(description = "Intake record ID", example = "12345")
     private Long id;
+
+    @Schema(description = "Food name", example = "Chicken Breast")
     private String foodName;
+
+    @Schema(description = "Consumed amount in grams", example = "150")
     private int amount;
+
+    @Schema(description = "Consumption date", example = "2024-01-15")
     private LocalDate date;
 
+    @Schema(description = "Calculated nutrition values for consumed amount")
     @Builder.Default
     private NutrimentsDto nutriments = new NutrimentsDto();
 }

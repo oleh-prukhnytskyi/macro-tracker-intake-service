@@ -10,6 +10,8 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.RequestDeduplicationService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.CustomHeaders;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.ProcessedEntityType;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -34,10 +36,27 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/intake")
+@Tag(
+        name = "Food Intake API",
+        description = "Track and manage daily food consumption with nutrition calculations"
+)
 public class IntakeController {
     private final RequestDeduplicationService requestDeduplicationService;
     private final IntakeService intakeService;
 
+    @Operation(
+            summary = "Get intake records",
+            description = """
+            Retrieve paginated food intake records for a specific date.
+            
+            **Date formats:**
+            - 'today': Current date
+            - 'yyyy-MM-dd': Specific date (e.g., 2024-01-15)
+            - Empty: All dates
+            
+            Automatically calculates nutrition values based on food amount.
+            """
+    )
     @GetMapping
     public ResponseEntity<PagedResponse<IntakeResponseDto>> findByDate(
             @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
@@ -70,6 +89,10 @@ public class IntakeController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(
+            summary = "Add food intake",
+            description = "Record food consumption with automatic nutrition calculation"
+    )
     @PostMapping
     public ResponseEntity<IntakeResponseDto> addIntake(
             @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
@@ -83,6 +106,10 @@ public class IntakeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    @Operation(
+            summary = "Update intake amount",
+            description = "Update the amount of consumed food with recalculated nutrition values"
+    )
     @PatchMapping("/{id}")
     public ResponseEntity<IntakeResponseDto> updateIntake(
             @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
@@ -92,6 +119,10 @@ public class IntakeController {
         return ResponseEntity.ok(updated);
     }
 
+    @Operation(
+            summary = "Delete intake record",
+            description = "Remove food intake record by ID"
+    )
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(
             @PathVariable Long id,
