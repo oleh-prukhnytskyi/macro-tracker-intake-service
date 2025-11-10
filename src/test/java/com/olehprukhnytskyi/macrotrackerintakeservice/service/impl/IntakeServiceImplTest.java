@@ -154,6 +154,11 @@ class IntakeServiceImplTest {
         when(intakeMapper.toModel(any())).thenReturn(new Intake());
         when(requestDeduplicationService.buildRequestKey(any(), any(), any()))
                 .thenReturn(requestKey);
+        when(intakeRepository.save(any())).thenAnswer(invocation -> {
+            Intake intake = invocation.getArgument(0);
+            intake.setId(1L);
+            return intake;
+        });
 
         // When
         intakeService.save(new IntakeRequestDto("food123"), userId, requestId);

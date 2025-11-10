@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/intake")
@@ -70,12 +72,13 @@ public class IntakeController {
                 try {
                     parsedDate = LocalDate.parse(date);
                 } catch (DateTimeParseException e) {
+                    log.warn("Invalid date format in request: {}", date);
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             "Invalid date format. Use 'today' or yyyy-MM-dd");
                 }
             }
         }
-
+        log.debug("Fetching intake records for userId={} date={}", userId, parsedDate);
         CacheablePage<IntakeResponseDto> page = intakeService
                 .findByDate(parsedDate, userId, pageable);
         PagedResponse<IntakeResponseDto> response = new PagedResponse<>(
@@ -86,6 +89,7 @@ public class IntakeController {
                         (int) page.getTotalElements()
                 )
         );
+        log.debug("Fetched {} intake records for userId={}", page.getContent().size(), userId);
         return ResponseEntity.ok(response);
     }
 
@@ -100,9 +104,14 @@ public class IntakeController {
             @Valid @RequestBody IntakeRequestDto intakeRequest) {
         if (requestDeduplicationService.isProcessed(
                 ProcessedEntityType.INTAKE, requestId, userId)) {
+            log.info("Duplicate intake request detected: userId={} requestId={}",
+                    userId, requestId);
             return ResponseEntity.status(HttpStatus.OK).body(null);
         }
+        log.info("Creating new intake record for userId={} requestId={}", userId, requestId);
         IntakeResponseDto saved = intakeService.save(intakeRequest, userId, requestId);
+        log.debug("Intake record created successfully for userId={} intakeId={}",
+                userId, saved.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
@@ -115,7 +124,9 @@ public class IntakeController {
             @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
             @PathVariable Long id,
             @Valid @RequestBody UpdateIntakeRequestDto intakeRequest) {
+        log.info("Updating intake record id={} for userId={}", id, userId);
         IntakeResponseDto updated = intakeService.update(id, intakeRequest, userId);
+        log.debug("Intake record updated id={} for userId={}", id, userId);
         return ResponseEntity.ok(updated);
     }
 
@@ -127,7 +138,9 @@ public class IntakeController {
     public ResponseEntity<Void> deleteById(
             @PathVariable Long id,
             @RequestHeader(CustomHeaders.X_USER_ID) Long userId) {
+        log.info("Deleting intake record id={} for userId={}", id, userId);
         intakeService.deleteById(id, userId);
+        log.debug("Deleted intake record id={} for userId={}", id, userId);
         return ResponseEntity.noContent().build();
     }
 }

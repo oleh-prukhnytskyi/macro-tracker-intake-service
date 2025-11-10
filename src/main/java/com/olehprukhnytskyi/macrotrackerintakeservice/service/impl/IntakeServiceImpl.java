@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class IntakeServiceImpl implements IntakeService {
@@ -48,10 +50,10 @@ public class IntakeServiceImpl implements IntakeService {
     @Transactional
     public IntakeResponseDto save(IntakeRequestDto intakeRequest,
                                   Long userId, String requestId) {
+        log.info("Saving intake for userId={} requestId={}", userId, requestId);
         Intake intake = intakeMapper.toModel(intakeRequest);
         intake.setUserId(userId);
         intake.setFoodId(intakeRequest.getFoodId());
-
         try {
             FoodDto food = foodClientService.getFoodById(intakeRequest.getFoodId());
             intakeMapper.updateIntakeFromFoodDto(intake, food);
@@ -70,13 +72,17 @@ public class IntakeServiceImpl implements IntakeService {
             );
             intake.setNutriments(nutriments);
         } catch (FeignException.NotFound ex) {
+            log.warn("Food not found for foodId={} userId={}", intakeRequest.getFoodId(), userId);
             throw new NotFoundException("Food not found");
         } catch (FeignException ex) {
+            log.error("Food service unavailable while saving intake for userId={} foodId={}",
+                    userId, intakeRequest.getFoodId());
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE, "Food service is unavailable");
         }
 
         Intake saved = intakeRepository.save(intake);
+        log.debug("Intake saved successfully for userId={} intakeId={}", userId, saved.getId());
 
         String requestKey = requestDeduplicationService.buildRequestKey(
                 ProcessedEntityType.INTAKE, requestId, userId
@@ -93,13 +99,12 @@ public class IntakeServiceImpl implements IntakeService {
     @Override
     public CacheablePage<IntakeResponseDto> findByDate(LocalDate date, Long userId,
                                               Pageable pageable) {
-        Page<Intake> intakes;
-        if (date != null) {
-            intakes = intakeRepository.findByUserIdAndDate(userId, date, pageable);
-        } else {
-            intakes = intakeRepository.findByUserId(userId, pageable);
-        }
+        log.debug("Fetching intake list for userId={} date={}", userId, date);
+        Page<Intake> intakes = (date != null)
+                ? intakeRepository.findByUserIdAndDate(userId, date, pageable)
+                : intakeRepository.findByUserId(userId, pageable);
         Page<IntakeResponseDto> dtoPage = intakes.map(intakeMapper::toDto);
+        log.debug("Fetched {} intake records for userId={}", dtoPage.getNumberOfElements(), userId);
         return CacheablePage.fromPage(dtoPage);
     }
 
@@ -111,6 +116,7 @@ public class IntakeServiceImpl implements IntakeService {
     @Transactional
     public IntakeResponseDto update(Long id, UpdateIntakeRequestDto intakeRequest,
                                     Long userId) {
+        log.info("Updating intake id={} for userId={}", id, userId);
         Intake intake = intakeRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new NotFoundException("Intake not found"));
         int oldAmount = intake.getAmount();
@@ -126,6 +132,7 @@ public class IntakeServiceImpl implements IntakeService {
             nutriments.setProtein(calculate(nutriments.getProteinPer100(), newAmount));
         }
         Intake saved = intakeRepository.save(intake);
+        log.debug("Intake updated successfully id={} userId={}", id, userId);
         return intakeMapper.toDto(saved);
     }
 
@@ -136,14 +143,15 @@ public class IntakeServiceImpl implements IntakeService {
     @Transactional
     @Override
     public void deleteById(Long id, Long userId) {
+        log.info("Deleting intake id={} for userId={}", id, userId);
         intakeRepository.deleteByIdAndUserId(id, userId);
-        intakeRepository.flush();
     }
 
     @CacheEvict(value = "user:intakes", key = "'user:' + #userId", allEntries = true)
     @Transactional
     @Override
     public void deleteAllByUserId(Long userId) {
+        log.info("Deleting all intakes for userId={}", userId);
         intakeRepository.deleteAllByUserId(userId);
     }
 

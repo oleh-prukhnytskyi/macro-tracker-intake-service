@@ -5,10 +5,12 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FoodClientServiceImpl implements FoodClientService {
@@ -20,6 +22,7 @@ public class FoodClientServiceImpl implements FoodClientService {
     )
     @Override
     public FoodDto getFoodById(String foodId) {
+        log.debug("Fetching food details for foodId={}", foodId);
         return foodClient.getFoodById(foodId);
     }
 }
