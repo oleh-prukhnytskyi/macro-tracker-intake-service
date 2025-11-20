@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.config.AbstractIntegrationTest;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.CacheablePage;
@@ -37,7 +38,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-class IntakeServiceImplCacheTest extends AbstractIntegrationTest {
+class IntakeServiceCacheTest extends AbstractIntegrationTest {
     @MockitoBean
     private FoodClientService foodClientService;
     @MockitoSpyBean
@@ -119,6 +120,8 @@ class IntakeServiceImplCacheTest extends AbstractIntegrationTest {
         // Given
         Long userId = 1L;
         Pageable pageable = Pageable.ofSize(20);
+
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         // When
         CacheablePage<IntakeResponseDto> intakes1 = intakeService

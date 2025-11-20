@@ -9,15 +9,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.olehprukhnytskyi.exception.ExternalServiceException;
+import com.olehprukhnytskyi.exception.NotFoundException;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.event.RequestProcessedEvent;
-import com.olehprukhnytskyi.macrotrackerintakeservice.exception.NotFoundException;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.RequestDeduplicationService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.ProcessedEntityType;
 import feign.FeignException;
@@ -30,11 +32,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
-class IntakeServiceImplTest {
+class IntakeServiceTest {
     @Mock
     private FoodClientService foodClientService;
     @Mock
@@ -47,7 +47,7 @@ class IntakeServiceImplTest {
     private IntakeMapper intakeMapper;
 
     @InjectMocks
-    private IntakeServiceImpl intakeService;
+    private IntakeService intakeService;
 
     private final Long userId = 456L;
     private final String requestId = "req1";
@@ -137,11 +137,9 @@ class IntakeServiceImplTest {
                 ));
 
         // When & Then
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        assertThrows(ExternalServiceException.class,
                 () -> intakeService.save(requestDto, userId, requestId));
 
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
-        assertEquals("Food service is unavailable", ex.getReason());
         verify(intakeRepository, never()).save(any());
         verify(intakeMapper).toModel(requestDto);
     }

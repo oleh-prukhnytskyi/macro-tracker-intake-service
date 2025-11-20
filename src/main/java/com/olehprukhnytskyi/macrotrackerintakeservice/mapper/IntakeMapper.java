@@ -19,7 +19,6 @@ public interface IntakeMapper {
     IntakeResponseDto toDto(Intake model);
 
     @Mappings({
-            @Mapping(target = "nutriments", source = "nutriments"),
             @Mapping(target = "foodName", source = "productName"),
             @Mapping(target = "id", ignore = true)
     })

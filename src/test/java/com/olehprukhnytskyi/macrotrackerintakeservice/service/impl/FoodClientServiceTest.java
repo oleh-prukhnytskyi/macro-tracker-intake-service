@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.olehprukhnytskyi.macrotrackerintakeservice.client.FoodClient;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import feign.FeignException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,12 +18,12 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class FoodClientServiceImplTest {
+class FoodClientServiceTest {
     @Mock
     private FoodClient foodClient;
 
     @InjectMocks
-    private FoodClientServiceImpl foodClientService;
+    private FoodClientService foodClientService;
 
     @Test
     @DisplayName("When food exists, should return DTO")

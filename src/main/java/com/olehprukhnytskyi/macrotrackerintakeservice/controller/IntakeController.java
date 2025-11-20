@@ -1,15 +1,17 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.controller;
 
+import com.olehprukhnytskyi.dto.PagedResponse;
+import com.olehprukhnytskyi.dto.Pagination;
+import com.olehprukhnytskyi.exception.BadRequestException;
+import com.olehprukhnytskyi.exception.error.CommonErrorCode;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.CacheablePage;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
-import com.olehprukhnytskyi.macrotrackerintakeservice.dto.PagedResponse;
-import com.olehprukhnytskyi.macrotrackerintakeservice.dto.Pagination;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.RequestDeduplicationService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.util.CustomHeaders;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.ProcessedEntityType;
+import com.olehprukhnytskyi.util.CustomHeaders;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -32,7 +34,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RestController
@@ -73,7 +74,7 @@ public class IntakeController {
                     parsedDate = LocalDate.parse(date);
                 } catch (DateTimeParseException e) {
                     log.warn("Invalid date format in request: {}", date);
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    throw new BadRequestException(CommonErrorCode.INVALID_DATE,
                             "Invalid date format. Use 'today' or yyyy-MM-dd");
                 }
             }
@@ -112,7 +113,8 @@ public class IntakeController {
         IntakeResponseDto saved = intakeService.save(intakeRequest, userId, requestId);
         log.debug("Intake record created successfully for userId={} intakeId={}",
                 userId, saved.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(saved);
     }
 
     @Operation(

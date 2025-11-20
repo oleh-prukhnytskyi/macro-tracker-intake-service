@@ -14,17 +14,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.olehprukhnytskyi.dto.PagedResponse;
+import com.olehprukhnytskyi.exception.BadRequestException;
 import com.olehprukhnytskyi.macrotrackerintakeservice.config.AbstractIntegrationTest;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.NutrimentsDto;
-import com.olehprukhnytskyi.macrotrackerintakeservice.dto.PagedResponse;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.util.CustomHeaders;
+import com.olehprukhnytskyi.util.CustomHeaders;
 import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
@@ -40,7 +41,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.server.ResponseStatusException;
 
 @Sql(scripts = "classpath:database/add-intake.sql",
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
@@ -175,8 +175,9 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(result ->
                         assertThat(result.getResolvedException())
-                                .isInstanceOf(ResponseStatusException.class)
-                                .hasMessageContaining("Invalid date format")
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessageContaining(
+                                        "Invalid date format. Use 'today' or yyyy-MM-dd")
                 );
     }
 

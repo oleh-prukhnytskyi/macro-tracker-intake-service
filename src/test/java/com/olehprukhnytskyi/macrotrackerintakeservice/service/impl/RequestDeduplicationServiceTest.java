@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.RequestDeduplicationService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.ProcessedEntityType;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,8 +18,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 @SuppressWarnings("unchecked")
-class RequestDeduplicationServiceImplTest {
-    private RequestDeduplicationServiceImpl service;
+class RequestDeduplicationServiceTest {
+    private RequestDeduplicationService service;
     private RedisTemplate<String, String> redisTemplate;
     private ValueOperations<String, String> valueOperations;
 
@@ -28,7 +29,7 @@ class RequestDeduplicationServiceImplTest {
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
-        service = new RequestDeduplicationServiceImpl(redisTemplate);
+        service = new RequestDeduplicationService(redisTemplate);
     }
 
     @Test
