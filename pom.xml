@@ -37,7 +37,7 @@
         <dependency>
             <groupId>com.olehprukhnytskyi</groupId>
             <artifactId>macro-tracker-common</artifactId>
-            <version>1.0.12</version>
+            <version>1.0.13</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -157,6 +157,10 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
     </dependencies>
 
