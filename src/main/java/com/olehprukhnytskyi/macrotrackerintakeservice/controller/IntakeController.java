@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -64,7 +65,7 @@ public class IntakeController {
     public ResponseEntity<PagedResponse<IntakeResponseDto>> findByDate(
             @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
             @RequestParam(required = false) String date,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
         LocalDate parsedDate = null;
         if (StringUtils.hasText(date)) {
             if (date.equalsIgnoreCase("today")) {
