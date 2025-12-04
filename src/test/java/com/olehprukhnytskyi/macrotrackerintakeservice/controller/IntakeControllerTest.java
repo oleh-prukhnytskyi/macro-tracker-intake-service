@@ -1,9 +1,7 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -11,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +26,6 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.repository.IntakeRepositor
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import com.olehprukhnytskyi.util.CustomHeaders;
 import java.time.LocalDate;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -244,30 +242,34 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                 .ignoringFields("id")
                 .isEqualTo(responseDto);
 
-        verify(redisTemplate.opsForValue()).set(anyString(), eq("1"), eq(1L), eq(TimeUnit.HOURS));
         verify(foodClientService).getFoodById("food-1");
     }
 
     @Test
-    @DisplayName("When request is duplicated, should return 200 with null body")
-    void addIntake_whenDuplicated_shouldReturnOkWithNullBody() throws Exception {
+    @DisplayName("When request is duplicated, should return ok")
+    void addIntake_whenDuplicated_shouldReturnOkBody() throws Exception {
         // Given
         String requestJson = objectMapper.writeValueAsString(new IntakeRequestDto("food-2", 200));
-        String expected = "";
+
+        FoodDto foodDto = FoodDto.builder()
+                .productName("Oatmeal")
+                .nutriments(new NutrimentsDto())
+                .build();
 
         when(redisTemplate.hasKey(anyString())).thenReturn(true);
+        when(foodClientService.getFoodById(anyString())).thenReturn(foodDto);
 
         // When
-        MvcResult mvcResult = mockMvc.perform(post("/api/intake")
+        mockMvc.perform(
+                post("/api/intake")
                         .header(CustomHeaders.X_USER_ID, 1L)
                         .header(CustomHeaders.X_REQUEST_ID, "req-123")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Then
-        assertEquals(expected, mvcResult.getResponse().getContentAsString());
+                        .content(requestJson)
+                )
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.foodName").value("Oatmeal"))
+                .andExpect(jsonPath("$.amount").value(200));
     }
 
     @Test

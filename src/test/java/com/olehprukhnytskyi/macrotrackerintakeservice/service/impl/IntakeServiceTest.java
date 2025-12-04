@@ -14,24 +14,19 @@ import com.olehprukhnytskyi.exception.NotFoundException;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
-import com.olehprukhnytskyi.macrotrackerintakeservice.event.RequestProcessedEvent;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.service.RequestDeduplicationService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.util.ProcessedEntityType;
 import feign.FeignException;
 import feign.Request;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class IntakeServiceTest {
@@ -40,18 +35,12 @@ class IntakeServiceTest {
     @Mock
     private IntakeRepository intakeRepository;
     @Mock
-    private RequestDeduplicationService requestDeduplicationService;
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
-    @Mock
     private IntakeMapper intakeMapper;
 
     @InjectMocks
     private IntakeService intakeService;
 
     private final Long userId = 456L;
-    private final String requestId = "req1";
-    private final String requestKey = "intake:" + requestId + ":" + userId;
 
     @Test
     @DisplayName("When valid request with existing food, should save intake and return DTO")
@@ -79,21 +68,13 @@ class IntakeServiceTest {
         }).when(intakeMapper).updateIntakeFromFoodDto(intake, foodDto);
         when(intakeRepository.save(intake)).thenReturn(savedIntake);
         when(intakeMapper.toDto(savedIntake)).thenReturn(responseDto);
-        when(requestDeduplicationService.buildRequestKey(
-                ProcessedEntityType.INTAKE, requestId, userId)
-        ).thenReturn(requestKey);
 
         // When
-        final IntakeResponseDto result = intakeService.save(requestDto, userId, requestId);
+        final IntakeResponseDto result = intakeService.save(requestDto, userId);
 
         // Then
         verify(intakeMapper).updateIntakeFromFoodDto(intake, foodDto);
         verify(intakeRepository).save(intake);
-
-        ArgumentCaptor<RequestProcessedEvent> eventCaptor = ArgumentCaptor
-                .forClass(RequestProcessedEvent.class);
-        verify(eventPublisher).publishEvent(eventCaptor.capture());
-        assertEquals(requestKey, eventCaptor.getValue().getRequestKey());
 
         assertEquals(responseDto, result);
         assertEquals(userId, intake.getUserId());
@@ -114,7 +95,7 @@ class IntakeServiceTest {
 
         // When & Then
         NotFoundException ex = assertThrows(NotFoundException.class,
-                () -> intakeService.save(requestDto, userId, requestId));
+                () -> intakeService.save(requestDto, userId));
 
         assertEquals("Food not found", ex.getMessage());
         verify(intakeRepository, never()).save(any());
@@ -138,33 +119,9 @@ class IntakeServiceTest {
 
         // When & Then
         assertThrows(ExternalServiceException.class,
-                () -> intakeService.save(requestDto, userId, requestId));
+                () -> intakeService.save(requestDto, userId));
 
         verify(intakeRepository, never()).save(any());
         verify(intakeMapper).toModel(requestDto);
-    }
-
-    @Test
-    @DisplayName("Should publish event with deduplication key")
-    void save_shouldPublishDeduplicationEvent() {
-        // Given
-        when(foodClientService.getFoodById(any())).thenReturn(new FoodDto());
-        when(intakeMapper.toModel(any())).thenReturn(new Intake());
-        when(requestDeduplicationService.buildRequestKey(any(), any(), any()))
-                .thenReturn(requestKey);
-        when(intakeRepository.save(any())).thenAnswer(invocation -> {
-            Intake intake = invocation.getArgument(0);
-            intake.setId(1L);
-            return intake;
-        });
-
-        // When
-        intakeService.save(new IntakeRequestDto("food123"), userId, requestId);
-
-        // Then
-        ArgumentCaptor<RequestProcessedEvent> captor = ArgumentCaptor
-                .forClass(RequestProcessedEvent.class);
-        verify(eventPublisher).publishEvent(captor.capture());
-        assertEquals(requestKey, captor.getValue().getRequestKey());
     }
 }

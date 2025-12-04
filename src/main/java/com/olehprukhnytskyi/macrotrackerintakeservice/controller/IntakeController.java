@@ -1,5 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.controller;
 
+import com.olehprukhnytskyi.config.annotation.Idempotent;
 import com.olehprukhnytskyi.dto.PagedResponse;
 import com.olehprukhnytskyi.dto.Pagination;
 import com.olehprukhnytskyi.exception.BadRequestException;
@@ -9,8 +10,6 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.service.RequestDeduplicationService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.util.ProcessedEntityType;
 import com.olehprukhnytskyi.util.CustomHeaders;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,7 +44,6 @@ import org.springframework.web.bind.annotation.RestController;
         description = "Track and manage daily food consumption with nutrition calculations"
 )
 public class IntakeController {
-    private final RequestDeduplicationService requestDeduplicationService;
     private final IntakeService intakeService;
 
     @Operation(
@@ -99,19 +97,13 @@ public class IntakeController {
             summary = "Add food intake",
             description = "Record food consumption with automatic nutrition calculation"
     )
+    @Idempotent
     @PostMapping
     public ResponseEntity<IntakeResponseDto> addIntake(
             @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
-            @RequestHeader(CustomHeaders.X_REQUEST_ID) String requestId,
             @Valid @RequestBody IntakeRequestDto intakeRequest) {
-        if (requestDeduplicationService.isProcessed(
-                ProcessedEntityType.INTAKE, requestId, userId)) {
-            log.info("Duplicate intake request detected: userId={} requestId={}",
-                    userId, requestId);
-            return ResponseEntity.status(HttpStatus.OK).body(null);
-        }
-        log.info("Creating new intake record for userId={} requestId={}", userId, requestId);
-        IntakeResponseDto saved = intakeService.save(intakeRequest, userId, requestId);
+        log.info("Creating new intake record for userId={}", userId);
+        IntakeResponseDto saved = intakeService.save(intakeRequest, userId);
         log.debug("Intake record created successfully for userId={} intakeId={}",
                 userId, saved.getId());
         return ResponseEntity.status(HttpStatus.CREATED)

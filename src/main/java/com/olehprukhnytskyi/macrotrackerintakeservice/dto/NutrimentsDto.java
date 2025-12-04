@@ -1,5 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.BigDecimalJsonSerializer;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Nutrition values")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NutrimentsDto {
     @Schema(description = "Calories", example = "247.5", minimum = "0.0")
     @Builder.Default

@@ -27,7 +27,6 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -93,7 +92,6 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
     void save_shouldClearCache() {
         // Given
         Long userId = 1L;
-        String requestId = UUID.randomUUID().toString();
         LocalDate today = LocalDate.now();
 
         Pageable pageable = PageRequest.of(0, 20);
@@ -108,7 +106,7 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
                 .foodId("12345678").build();
 
         // When
-        intakeService.save(intakeRequestDto, userId, requestId);
+        intakeService.save(intakeRequestDto, userId);
 
         // Then
         assertThat(redisTemplate.hasKey(cacheKey)).isFalse();

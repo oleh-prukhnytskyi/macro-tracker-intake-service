@@ -10,12 +10,10 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
-import com.olehprukhnytskyi.macrotrackerintakeservice.event.RequestProcessedEvent;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.IntakeRepository;
-import com.olehprukhnytskyi.macrotrackerintakeservice.util.ProcessedEntityType;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -25,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,8 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class IntakeService {
-    private final RequestDeduplicationService requestDeduplicationService;
-    private final ApplicationEventPublisher eventPublisher;
     private final IntakeRepository intakeRepository;
     private final IntakeMapper intakeMapper;
     private final FoodClientService foodClientService;
@@ -46,9 +41,8 @@ public class IntakeService {
             @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
     })
     @Transactional
-    public IntakeResponseDto save(IntakeRequestDto intakeRequest,
-                                  Long userId, String requestId) {
-        log.info("Saving intake for userId={} requestId={}", userId, requestId);
+    public IntakeResponseDto save(IntakeRequestDto intakeRequest, Long userId) {
+        log.info("Saving intake for userId={}", userId);
         Intake intake = intakeMapper.toModel(intakeRequest);
         intake.setUserId(userId);
         intake.setFoodId(intakeRequest.getFoodId());
@@ -78,14 +72,8 @@ public class IntakeService {
             throw new ExternalServiceException(CommonErrorCode.UPSTREAM_SERVICE_UNAVAILABLE,
                     "Food service is unavailable");
         }
-
         Intake saved = intakeRepository.save(intake);
         log.debug("Intake saved successfully for userId={} intakeId={}", userId, saved.getId());
-
-        String requestKey = requestDeduplicationService.buildRequestKey(
-                ProcessedEntityType.INTAKE, requestId, userId
-        );
-        eventPublisher.publishEvent(new RequestProcessedEvent(requestKey));
         return intakeMapper.toDto(saved);
     }
 
