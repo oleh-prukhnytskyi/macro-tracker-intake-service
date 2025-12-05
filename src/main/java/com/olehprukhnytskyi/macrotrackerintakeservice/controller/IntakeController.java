@@ -1,6 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.controller;
 
-import com.olehprukhnytskyi.config.annotation.Idempotent;
+import com.olehprukhnytskyi.annotation.Idempotent;
 import com.olehprukhnytskyi.dto.PagedResponse;
 import com.olehprukhnytskyi.dto.Pagination;
 import com.olehprukhnytskyi.exception.BadRequestException;

@@ -1,4 +1,4 @@
-package com.olehprukhnytskyi.macrotrackerintakeservice.repository;
+package com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa;
 
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import java.time.LocalDate;

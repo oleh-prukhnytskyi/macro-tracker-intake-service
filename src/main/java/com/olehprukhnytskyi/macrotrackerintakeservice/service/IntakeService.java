@@ -13,7 +13,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
-import com.olehprukhnytskyi.macrotrackerintakeservice.repository.IntakeRepository;
+import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
