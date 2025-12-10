@@ -1,5 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.dto;
 
+import com.olehprukhnytskyi.util.IntakePeriod;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,9 @@ public class IntakeResponseDto {
 
     @Schema(description = "Consumption date", example = "2024-01-15")
     private LocalDate date;
+
+    @Schema(description = "Consumption period", example = "BREAKFAST")
+    private IntakePeriod intakePeriod;
 
     @Schema(description = "Calculated nutrition values for consumed amount")
     @Builder.Default

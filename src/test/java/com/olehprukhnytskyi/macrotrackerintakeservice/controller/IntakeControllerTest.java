@@ -14,7 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olehprukhnytskyi.dto.PagedResponse;
-import com.olehprukhnytskyi.exception.BadRequestException;
 import com.olehprukhnytskyi.macrotrackerintakeservice.config.AbstractIntegrationTest;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
@@ -25,6 +24,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import com.olehprukhnytskyi.util.CustomHeaders;
+import com.olehprukhnytskyi.util.IntakePeriod;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -126,35 +126,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
         assertThat(response.getData())
                 .extracting(IntakeResponseDto::getDate)
                 .contains(LocalDate.parse(date));
-        assertThat(response.getPagination().getLimit()).isEqualTo(20);
-    }
-
-    @Test
-    @DisplayName("When date=today, should return today's intakes")
-    void findByDate_whenToday_shouldReturnTodayIntakes() throws Exception {
-        // Given
-        String today = LocalDate.now().toString();
-
-        // When
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/api/intake")
-                                .header(CustomHeaders.X_USER_ID, 1L)
-                                .param("date", "today")
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Then
-        String jsonResponse = mvcResult.getResponse().getContentAsString();
-        PagedResponse<IntakeResponseDto> response = objectMapper.readValue(
-                jsonResponse,
-                objectMapper.getTypeFactory()
-                        .constructParametricType(PagedResponse.class, IntakeResponseDto.class)
-        );
-
-        assertThat(response.getData())
-                .allMatch(dto -> dto.getDate().equals(LocalDate.parse(today)));
+        assertThat(response.getPagination().getLimit()).isEqualTo(100);
     }
 
     @Test
@@ -171,12 +143,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isBadRequest())
-                .andExpect(result ->
-                        assertThat(result.getResolvedException())
-                                .isInstanceOf(BadRequestException.class)
-                                .hasMessageContaining(
-                                        "Invalid date format. Use 'today' or yyyy-MM-dd")
-                );
+                .andExpect(jsonPath("$.detail").value("Invalid date format"));
     }
 
     @Test
@@ -212,6 +179,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                 .nutriments(new NutrimentsDto())
                 .date(LocalDate.now())
                 .foodName("Oatmeal")
+                .intakePeriod(IntakePeriod.SNACK)
                 .build();
 
         FoodDto foodDto = FoodDto.builder()
@@ -219,7 +187,12 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                 .nutriments(new NutrimentsDto())
                 .build();
 
-        String jsonRequest = objectMapper.writeValueAsString(new IntakeRequestDto("food-1", 100));
+        String jsonRequest = objectMapper.writeValueAsString(IntakeRequestDto.builder()
+                .foodId("food-1")
+                .amount(100)
+                .date(LocalDate.now())
+                .intakePeriod(IntakePeriod.SNACK)
+                .build());
 
         when(redisTemplate.hasKey(anyString())).thenReturn(false);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -249,7 +222,12 @@ class IntakeControllerTest extends AbstractIntegrationTest {
     @DisplayName("When request is duplicated, should return ok")
     void addIntake_whenDuplicated_shouldReturnOkBody() throws Exception {
         // Given
-        String requestJson = objectMapper.writeValueAsString(new IntakeRequestDto("food-2", 200));
+        String requestJson = objectMapper.writeValueAsString(IntakeRequestDto.builder()
+                .foodId("food-2")
+                .amount(200)
+                .date(LocalDate.now())
+                .intakePeriod(IntakePeriod.BREAKFAST)
+                .build());
 
         FoodDto foodDto = FoodDto.builder()
                 .productName("Oatmeal")
@@ -281,6 +259,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
 
         UpdateIntakeRequestDto requestDto = UpdateIntakeRequestDto.builder()
                 .amount(100)
+                .intakePeriod(IntakePeriod.BREAKFAST)
                 .build();
         String requestJson = objectMapper.writeValueAsString(requestDto);
 
@@ -289,6 +268,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                 .foodName("Potato")
                 .date(LocalDate.parse("2025-09-06"))
                 .amount(100)
+                .intakePeriod(IntakePeriod.BREAKFAST)
                 .build();
         String expected = objectMapper.writeValueAsString(responseDto);
 

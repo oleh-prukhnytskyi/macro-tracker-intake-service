@@ -25,6 +25,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
+import com.olehprukhnytskyi.util.IntakePeriod;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,8 +82,10 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
                 .date(LocalDate.now())
                 .userId(1L)
                 .foodName("Rice")
+                .foodId("00000000")
                 .nutriments(nutriments)
                 .amount(200)
+                .intakePeriod(IntakePeriod.SNACK)
                 .build();
         intakeId = intakeRepository.save(intake).getId();
     }
@@ -103,6 +106,8 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
 
         IntakeRequestDto intakeRequestDto = IntakeRequestDto.builder()
                 .amount(100)
+                .date(LocalDate.now())
+                .intakePeriod(IntakePeriod.SNACK)
                 .foodId("12345678").build();
 
         // When

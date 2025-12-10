@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1765389674932-1" author="oleh-prukhnytskyi">
+        <addNotNullConstraint columnDataType="VARCHAR(255)" columnName="food_id" tableName="intake" validate="true"/>
+
+        <addNotNullConstraint columnDataType="DATE" columnName="date" tableName="intake" validate="true"/>
+
+        <addNotNullConstraint columnDataType="BIGINT" columnName="user_id" tableName="intake" validate="true"/>
+
+        <addNotNullConstraint columnName="intake_period" tableName="intake"/>
+    </changeSet>
+
+</databaseChangeLog>
