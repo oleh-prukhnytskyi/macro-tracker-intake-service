@@ -1,5 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.service;
 
+import com.olehprukhnytskyi.event.UserDeletedEvent;
 import com.olehprukhnytskyi.exception.ExternalServiceException;
 import com.olehprukhnytskyi.exception.NotFoundException;
 import com.olehprukhnytskyi.exception.error.CommonErrorCode;
@@ -13,6 +14,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
+import com.olehprukhnytskyi.macrotrackerintakeservice.producer.UserEventProducer;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import feign.FeignException;
 import java.math.BigDecimal;
@@ -32,9 +34,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class IntakeService {
+    private static final int DELETE_BATCH_SIZE = 1000;
     private final IntakeRepository intakeRepository;
     private final IntakeMapper intakeMapper;
     private final FoodClientService foodClientService;
+    private final UserEventProducer userEventProducer;
 
     @Caching(evict = {
             @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
@@ -133,9 +137,16 @@ public class IntakeService {
 
     @CacheEvict(value = "user:intakes", key = "'user:' + #userId", allEntries = true)
     @Transactional
-    public void deleteAllByUserId(Long userId) {
-        log.info("Deleting all intakes for userId={}", userId);
-        intakeRepository.deleteAllByUserId(userId);
+    public void deleteUserIntakesRecursively(Long userId) {
+        log.info("Processing batch deletion for user: {}", userId);
+        int deletedCount = intakeRepository.deleteBatchByUserId(userId, DELETE_BATCH_SIZE);
+        log.info("Deleted {} intake records for user {}", deletedCount, userId);
+        if (deletedCount >= DELETE_BATCH_SIZE) {
+            log.info("User {} still has data. Republishing event to continue deletion.", userId);
+            userEventProducer.sendUserDeletedEvent(new UserDeletedEvent(userId));
+        } else {
+            log.info("Data cleanup completed for user {}", userId);
+        }
     }
 
     private BigDecimal calculate(BigDecimal per100, int amount) {

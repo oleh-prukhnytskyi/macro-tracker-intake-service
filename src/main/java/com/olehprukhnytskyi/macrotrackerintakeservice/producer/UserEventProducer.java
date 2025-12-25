@@ -1,0 +1,23 @@
+package com.olehprukhnytskyi.macrotrackerintakeservice.producer;
+
+import com.olehprukhnytskyi.event.UserDeletedEvent;
+import com.olehprukhnytskyi.exception.EventProcessingException;
+import com.olehprukhnytskyi.exception.error.EventErrorCode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class UserEventProducer {
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    public void sendUserDeletedEvent(UserDeletedEvent event) {
+        try {
+            kafkaTemplate.send("user-deleted", event).get();
+        } catch (Exception e) {
+            throw new EventProcessingException(EventErrorCode.KAFKA_SEND_FAILED,
+                    "Cannot send Kafka event", e);
+        }
+    }
+}

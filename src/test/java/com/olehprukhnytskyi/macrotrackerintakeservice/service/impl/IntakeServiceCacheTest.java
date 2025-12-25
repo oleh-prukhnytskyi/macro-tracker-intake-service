@@ -194,7 +194,7 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("Should clear cache")
-    void deleteAllByUserId_shouldClearCache() {
+    void deleteUserIntakesRecursively_shouldClearCache() {
         // Given
         Long userId = 1L;
         LocalDate today = LocalDate.now();
@@ -207,7 +207,7 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
         assertThat(redisTemplate.hasKey(cacheKey)).isTrue();
 
         // When
-        intakeService.deleteAllByUserId(userId);
+        intakeService.deleteUserIntakesRecursively(userId);
 
         // Then
         assertThat(redisTemplate.hasKey(cacheKey)).isFalse();

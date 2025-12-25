@@ -30,7 +30,7 @@ public class UserEventConsumer {
         }
         try {
             log.info("Processing user-deleted event for userId={}", event.getUserId());
-            intakeService.deleteAllByUserId(event.getUserId());
+            intakeService.deleteUserIntakesRecursively(event.getUserId());
             log.info("Successfully deleted all intakes for userId={}", event.getUserId());
         } catch (Exception e) {
             log.error("Error processing user-deleted event for userId={}", event.getUserId(), e);
