@@ -1,15 +1,13 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.model;
 
-import com.olehprukhnytskyi.util.IntakePeriod;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import java.time.LocalDate;
+import jakarta.persistence.OneToMany;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,32 +20,17 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Intake {
+public class MealTemplate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private String mealGroupId;
 
     @Column(nullable = false)
     private Long userId;
 
     @Column(nullable = false)
-    private String foodId;
+    private String name;
 
-    @Builder.Default
-    @Embedded
-    private Nutriments nutriments = new Nutriments();
-
-    private String foodName;
-
-    @Column(nullable = false)
-    private LocalDate date;
-
-    private int amount;
-
-    @Builder.Default
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private IntakePeriod intakePeriod = IntakePeriod.SNACK;
+    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MealTemplateItem> items;
 }

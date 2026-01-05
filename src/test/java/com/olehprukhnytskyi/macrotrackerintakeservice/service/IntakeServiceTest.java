@@ -1,4 +1,4 @@
-package com.olehprukhnytskyi.macrotrackerintakeservice.service.impl;
+package com.olehprukhnytskyi.macrotrackerintakeservice.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -17,8 +17,6 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
-import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
 import feign.FeignException;
 import feign.Request;
 import org.junit.jupiter.api.DisplayName;
@@ -87,9 +85,7 @@ class IntakeServiceTest {
     void save_whenFoodNotFound_shouldThrowBadRequest() {
         // Given
         IntakeRequestDto requestDto = new IntakeRequestDto("invalid");
-        Intake intake = new Intake();
 
-        when(intakeMapper.toModel(requestDto)).thenReturn(intake);
         when(foodClientService.getFoodById("invalid")).thenThrow(new FeignException
                 .NotFound("Not found", mock(Request.class), null, null));
 
@@ -106,9 +102,7 @@ class IntakeServiceTest {
     void save_whenFoodServiceUnavailable_shouldThrowServiceUnavailable() {
         // Given
         IntakeRequestDto requestDto = new IntakeRequestDto("food123");
-        Intake intake = new Intake();
 
-        when(intakeMapper.toModel(requestDto)).thenReturn(intake);
         when(foodClientService.getFoodById("food123"))
                 .thenThrow(new FeignException.InternalServerError(
                         "Service Unavailable",
@@ -122,6 +116,5 @@ class IntakeServiceTest {
                 () -> intakeService.save(requestDto, userId));
 
         verify(intakeRepository, never()).save(any());
-        verify(intakeMapper).toModel(requestDto);
     }
 }

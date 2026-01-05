@@ -1,20 +1,20 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.model;
 
-import com.olehprukhnytskyi.util.IntakePeriod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import java.time.LocalDate;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
@@ -22,32 +22,25 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Intake {
+public class MealTemplateItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String mealGroupId;
-
-    @Column(nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id")
+    @ToString.Exclude
+    private MealTemplate template;
 
     @Column(nullable = false)
     private String foodId;
 
-    @Builder.Default
-    @Embedded
-    private Nutriments nutriments = new Nutriments();
-
+    @Column(nullable = false)
     private String foodName;
 
-    @Column(nullable = false)
-    private LocalDate date;
+    @Embedded
+    private Nutriments nutriments;
 
+    @Column(nullable = false)
     private int amount;
-
-    @Builder.Default
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private IntakePeriod intakePeriod = IntakePeriod.SNACK;
 }

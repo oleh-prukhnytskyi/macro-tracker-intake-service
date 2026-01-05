@@ -25,12 +25,22 @@ public interface IntakeRepository extends JpaRepository<Intake, Long> {
     @Transactional
     @Modifying
     @Query(value = """
-        DELETE FROM intake 
+        DELETE FROM intake\s
         WHERE id IN (
-            SELECT id FROM intake 
-            WHERE user_id = :userId 
+            SELECT id FROM intake\s
+            WHERE user_id = :userId\s
             LIMIT :batchSize
         )
             """, nativeQuery = true)
-    int deleteBatchByUserId(@Param("userId") Long userId, @Param("batchSize") int batchSize);
+    int deleteBatchByUserId(
+            @Param("userId") Long userId,
+            @Param("batchSize") int batchSize
+    );
+
+    @Modifying
+    @Query("delete from Intake i where i.mealGroupId = :groupId and i.userId = :userId")
+    void deleteByMealGroupIdAndUserId(
+            @Param("groupId") String groupId,
+            @Param("userId") Long userId
+    );
 }

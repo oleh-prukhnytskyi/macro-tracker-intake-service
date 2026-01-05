@@ -1,0 +1,132 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1767557540467-1
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_mealtemplate
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: user_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(255)
+            tableName: meal_template
+  - changeSet:
+      id: 1767557540467-2
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_mealtemplateitem
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: template_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: food_id
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: food_name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: amount
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: calories_per_100
+                  type: decimal
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: carbohydrates_per_100
+                  type: decimal
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: fat_per_100
+                  type: decimal
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: protein_per_100
+                  type: decimal
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: calories_total
+                  type: decimal
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: carbohydrates_total
+                  type: decimal
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: fat_total
+                  type: decimal
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: protein_total
+                  type: decimal
+            tableName: meal_template_item
+  - changeSet:
+      id: 1767557540467-3
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: meal_group_id
+                  type: VARCHAR(255)
+            tableName: intake
+  - changeSet:
+      id: 1767557540467-4
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: template_id
+            baseTableName: meal_template_item
+            constraintName: FK_MEALTEMPLATEITEM_ON_TEMPLATE
+            referencedColumnNames: id
+            referencedTableName: meal_template
+

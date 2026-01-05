@@ -1,4 +1,4 @@
-package com.olehprukhnytskyi.macrotrackerintakeservice.service.impl;
+package com.olehprukhnytskyi.macrotrackerintakeservice.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import com.olehprukhnytskyi.macrotrackerintakeservice.client.FoodClient;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
-import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import feign.FeignException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

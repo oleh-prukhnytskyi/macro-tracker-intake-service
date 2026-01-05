@@ -1,5 +1,8 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.service;
 
+import static com.olehprukhnytskyi.macrotrackerintakeservice.util.IntakeUtils.calculateNutriments;
+import static com.olehprukhnytskyi.macrotrackerintakeservice.util.IntakeUtils.recalculateExistingIntake;
+
 import com.olehprukhnytskyi.event.UserDeletedEvent;
 import com.olehprukhnytskyi.exception.ExternalServiceException;
 import com.olehprukhnytskyi.exception.NotFoundException;
@@ -13,12 +16,9 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
-import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.producer.UserEventProducer;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import feign.FeignException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,26 +47,17 @@ public class IntakeService {
     @Transactional
     public IntakeResponseDto save(IntakeRequestDto intakeRequest, Long userId) {
         log.info("Saving intake for userId={}", userId);
-        Intake intake = intakeMapper.toModel(intakeRequest);
-        intake.setUserId(userId);
-        intake.setFoodId(intakeRequest.getFoodId());
         try {
             FoodDto food = foodClientService.getFoodById(intakeRequest.getFoodId());
+            Intake intake = intakeMapper.toModel(intakeRequest);
+            intake.setUserId(userId);
+            intake.setFoodId(intakeRequest.getFoodId());
             intakeMapper.updateIntakeFromFoodDto(intake, food);
-
-            int amount = intakeRequest.getAmount();
-            Nutriments nutriments = new Nutriments(
-                    food.getNutriments().getCalories(),
-                    food.getNutriments().getCarbohydrates(),
-                    food.getNutriments().getFat(),
-                    food.getNutriments().getProtein(),
-
-                    calculate(food.getNutriments().getCalories(), amount),
-                    calculate(food.getNutriments().getCarbohydrates(), amount),
-                    calculate(food.getNutriments().getFat(), amount),
-                    calculate(food.getNutriments().getProtein(), amount)
-            );
-            intake.setNutriments(nutriments);
+            intake.setNutriments(calculateNutriments(food.getNutriments(),
+                    intakeRequest.getAmount()));
+            Intake saved = intakeRepository.save(intake);
+            log.debug("Intake saved successfully for userId={} intakeId={}", userId, saved.getId());
+            return intakeMapper.toDto(saved);
         } catch (FeignException.NotFound ex) {
             log.warn("Food not found for foodId={} userId={}", intakeRequest.getFoodId(), userId);
             throw new NotFoundException(FoodErrorCode.FOOD_NOT_FOUND, "Food not found");
@@ -76,9 +67,6 @@ public class IntakeService {
             throw new ExternalServiceException(CommonErrorCode.UPSTREAM_SERVICE_UNAVAILABLE,
                     "Food service is unavailable");
         }
-        Intake saved = intakeRepository.save(intake);
-        log.debug("Intake saved successfully for userId={} intakeId={}", userId, saved.getId());
-        return intakeMapper.toDto(saved);
     }
 
     @Cacheable(
@@ -108,17 +96,11 @@ public class IntakeService {
         Intake intake = intakeRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new NotFoundException(IntakeErrorCode.INTAKE_NOT_FOUND,
                         "Intake not found"));
+        intakeMapper.updateFromDto(intake, intakeRequest);
         int oldAmount = intake.getAmount();
         int newAmount = intakeRequest.getAmount();
-
-        intakeMapper.updateFromDto(intake, intakeRequest);
-
         if (oldAmount != newAmount) {
-            Nutriments nutriments = intake.getNutriments();
-            nutriments.setCalories(calculate(nutriments.getCaloriesPer100(), newAmount));
-            nutriments.setCarbohydrates(calculate(nutriments.getCarbohydratesPer100(), newAmount));
-            nutriments.setFat(calculate(nutriments.getFatPer100(), newAmount));
-            nutriments.setProtein(calculate(nutriments.getProteinPer100(), newAmount));
+            recalculateExistingIntake(intake, newAmount);
         }
         Intake saved = intakeRepository.save(intake);
         log.debug("Intake updated successfully id={} userId={}", id, userId);
@@ -142,15 +124,11 @@ public class IntakeService {
         int deletedCount = intakeRepository.deleteBatchByUserId(userId, DELETE_BATCH_SIZE);
         log.info("Deleted {} intake records for user {}", deletedCount, userId);
         if (deletedCount >= DELETE_BATCH_SIZE) {
-            log.info("User {} still has data. Republishing event to continue deletion.", userId);
+            log.info("User {} still has data. Republishing event to continue deletion.",
+                    userId);
             userEventProducer.sendUserDeletedEvent(new UserDeletedEvent(userId));
         } else {
             log.info("Data cleanup completed for user {}", userId);
         }
-    }
-
-    private BigDecimal calculate(BigDecimal per100, int amount) {
-        return per100.multiply(BigDecimal.valueOf(amount))
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
 }

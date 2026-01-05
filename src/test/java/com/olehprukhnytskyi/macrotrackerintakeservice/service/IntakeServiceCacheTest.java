@@ -1,4 +1,4 @@
-package com.olehprukhnytskyi.macrotrackerintakeservice.service.impl;
+package com.olehprukhnytskyi.macrotrackerintakeservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
@@ -23,8 +23,6 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
-import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.service.IntakeService;
 import com.olehprukhnytskyi.util.IntakePeriod;
 import java.math.BigDecimal;
 import java.time.LocalDate;
