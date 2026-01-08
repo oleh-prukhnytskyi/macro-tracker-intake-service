@@ -7,7 +7,9 @@ import com.olehprukhnytskyi.exception.error.IntakeErrorCode;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.MealTemplateRequestDto;
+import com.olehprukhnytskyi.macrotrackerintakeservice.dto.MealTemplateResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
+import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.MealTemplateMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.NutrimentsMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.MealTemplate;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,9 +41,18 @@ public class MealService {
     private final IntakeRepository intakeRepository;
     private final MealTemplateRepository mealTemplateRepository;
     private final IntakeMapper intakeMapper;
+    private final MealTemplateMapper mealTemplateMapper;
     private final CacheManager cacheManager;
     private final NutrimentsMapper nutrimentsMapper;
     private final FoodClientService foodClientService;
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.MEAL_TEMPLATES, key = "#userId")
+    public List<MealTemplateResponseDto> getTemplates(Long userId) {
+        log.info("Fetching meal templates from DB for userId={}", userId);
+        List<MealTemplate> templates = mealTemplateRepository.findAllByUserId(userId);
+        return mealTemplateMapper.toDtoList(templates);
+    }
 
     @Transactional
     @CacheEvict(value = CacheConstants.MEAL_TEMPLATES, key = "#userId")
@@ -96,20 +108,16 @@ public class MealService {
                                                        IntakePeriod period, Long userId,
                                                        String batchId) {
         List<Intake> intakes = new ArrayList<>();
-        for (MealTemplateItem mealTemplateItem : items) {
+        for (MealTemplateItem item : items) {
             Intake intake = new Intake();
             intake.setMealGroupId(batchId);
             intake.setUserId(userId);
-            intake.setFoodId(mealTemplateItem.getFoodId());
-            intake.setFoodName(mealTemplateItem.getFoodName());
+            intake.setFoodId(item.getFoodId());
+            intake.setFoodName(item.getFoodName());
             intake.setDate(date);
             intake.setIntakePeriod(period != null ? period : IntakePeriod.SNACK);
-            intake.setAmount(mealTemplateItem.getAmount());
-            Nutriments calculatedNutriments = calculateNutriments(
-                    nutrimentsMapper.toDto(mealTemplateItem.getNutriments()),
-                    mealTemplateItem.getAmount()
-            );
-            intake.setNutriments(calculatedNutriments);
+            intake.setAmount(item.getAmount());
+            intake.setNutriments(nutrimentsMapper.clone(item.getNutriments()));
             intakes.add(intake);
         }
         return intakes;
@@ -133,11 +141,12 @@ public class MealService {
             if (amount == null) {
                 continue;
             }
+            Nutriments calculatedNutriments = calculateNutriments(food.getNutriments(), amount);
             MealTemplateItem mealTemplateItem = MealTemplateItem.builder()
                     .template(template)
                     .foodId(food.getId())
                     .amount(amount)
-                    .nutriments(nutrimentsMapper.toModel(food.getNutriments()))
+                    .nutriments(calculatedNutriments)
                     .foodName(food.getProductName())
                     .build();
             meals.add(mealTemplateItem);

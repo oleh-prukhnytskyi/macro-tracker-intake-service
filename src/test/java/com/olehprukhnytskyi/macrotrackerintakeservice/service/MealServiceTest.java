@@ -16,6 +16,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.MealTemplateRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.NutrimentsDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
+import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.MealTemplateMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.NutrimentsMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.MealTemplate;
@@ -45,6 +46,8 @@ class MealServiceTest {
     @Mock
     private IntakeMapper intakeMapper;
     @Mock
+    private MealTemplateMapper mealTemplateMapper;
+    @Mock
     private NutrimentsMapper nutrimentsMapper;
     @Mock
     private FoodClientService foodClientService;
@@ -69,7 +72,6 @@ class MealServiceTest {
                 .build();
 
         when(foodClientService.getFoodsByIds(List.of(foodId))).thenReturn(List.of(foodDto));
-        when(nutrimentsMapper.toModel(mockNutrimentsDto)).thenReturn(new Nutriments());
 
         MealTemplate savedTemplateMock = mock(MealTemplate.class);
         when(savedTemplateMock.getId()).thenReturn(10L);
@@ -136,6 +138,7 @@ class MealServiceTest {
 
         Nutriments baseNutriments = new Nutriments();
         baseNutriments.setCaloriesPer100(BigDecimal.valueOf(200));
+        baseNutriments.setCalories(BigDecimal.valueOf(100));
 
         MealTemplateItem item = MealTemplateItem.builder()
                 .foodId("f1")
@@ -156,9 +159,10 @@ class MealServiceTest {
 
         when(mealTemplateRepository.findByIdAndUserId(templateId, userId))
                 .thenReturn(Optional.of(template));
-        when(nutrimentsMapper.toDto(baseNutriments)).thenReturn(nutrimentsDto);
         when(intakeRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
         when(intakeMapper.toDto(any(Intake.class))).thenReturn(new IntakeResponseDto());
+        when(nutrimentsMapper.clone(any(Nutriments.class)))
+                .thenAnswer(invocation -> invocation.<Nutriments>getArgument(0));
 
         // When
         mealService.applyTemplate(templateId, LocalDate.now(), IntakePeriod.LUNCH, userId);
@@ -170,7 +174,7 @@ class MealServiceTest {
         List<Intake> savedIntakes = intakeCaptor.getValue();
         assertThat(savedIntakes).hasSize(1);
 
-        Intake savedIntake = savedIntakes.get(0);
+        Intake savedIntake = savedIntakes.getFirst();
         assertThat(savedIntake.getMealGroupId()).isNotNull();
         assertThat(savedIntake.getAmount()).isEqualTo(50);
         assertThat(savedIntake.getFoodName()).isEqualTo("Rice");

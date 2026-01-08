@@ -2,6 +2,7 @@ package com.olehprukhnytskyi.macrotrackerintakeservice.controller;
 
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.MealTemplateRequestDto;
+import com.olehprukhnytskyi.macrotrackerintakeservice.dto.MealTemplateResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.MealService;
 import com.olehprukhnytskyi.util.CustomHeaders;
 import com.olehprukhnytskyi.util.IntakePeriod;
@@ -17,6 +18,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,6 +37,21 @@ import org.springframework.web.bind.annotation.RestController;
 )
 public class MealController {
     private final MealService mealService;
+
+    @Operation(
+            summary = "Get user templates",
+            description = """
+            Retrieve all meal templates created by the user.
+            Results are cached to improve performance.
+            """)
+    @GetMapping
+    public ResponseEntity<List<MealTemplateResponseDto>> getAllTemplates(
+            @RequestHeader(CustomHeaders.X_USER_ID) Long userId) {
+        log.info("Request to get all templates for userId={}", userId);
+        List<MealTemplateResponseDto> templates = mealService.getTemplates(userId);
+        log.debug("Retrieved {} templates for userId={}", templates.size(), userId);
+        return ResponseEntity.ok(templates);
+    }
 
     @Operation(
             summary = "Apply meal template",

@@ -218,7 +218,7 @@ class MealControllerTest extends AbstractIntegrationTest {
         assertThat(intakes).hasSize(2);
         assertThat(intakes.get(0).getMealGroupId()).isNotNull();
         assertThat(intakes.get(0).getMealGroupId()).isEqualTo(intakes.get(1).getMealGroupId());
-        assertThat(intakes.get(0).getNutriments().getCalories())
+        assertThat(intakes.get(0).getNutriments().getCaloriesPer100())
                 .isGreaterThan(BigDecimal.ZERO);
     }
 
@@ -316,8 +316,8 @@ class MealControllerTest extends AbstractIntegrationTest {
                 .template(template)
                 .foodId("f1")
                 .foodName("Food 1")
-                .amount(100)
-                .nutriments(new Nutriments(BigDecimal.valueOf(100), BigDecimal.ZERO,
+                .amount(110)
+                .nutriments(new Nutriments(BigDecimal.valueOf(100), BigDecimal.TEN,
                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
                 .build();
@@ -327,7 +327,7 @@ class MealControllerTest extends AbstractIntegrationTest {
                 .foodId("f2")
                 .foodName("Food 2")
                 .amount(50)
-                .nutriments(new Nutriments(BigDecimal.valueOf(200), BigDecimal.ZERO,
+                .nutriments(new Nutriments(BigDecimal.valueOf(200), BigDecimal.TEN,
                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
                 .build();
