@@ -1,20 +1,16 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.config.AbstractIntegrationTest;
-import com.olehprukhnytskyi.macrotrackerintakeservice.dto.CacheablePage;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
@@ -23,15 +19,17 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
+import com.olehprukhnytskyi.macrotrackerintakeservice.util.CacheConstants;
 import com.olehprukhnytskyi.util.IntakePeriod;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -49,11 +47,14 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Long intakeId;
+    private Long intakeId = 1L;
+    private final Long userId = 1L;
+    private final LocalDate today = LocalDate.now();
 
     @BeforeEach
     void setUp() {
-        intakeRepository.deleteAll();
+        Objects.requireNonNull(redisTemplate.getConnectionFactory())
+                .getConnection().serverCommands().flushAll();
 
         FoodDto foodDto = FoodDto.builder()
                 .nutriments(NutrimentsDto.builder()
@@ -64,6 +65,7 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
                         .build())
                 .build();
         when(foodClientService.getFoodById(anyString())).thenReturn(foodDto);
+        when(foodClientService.getFoodsByIds(anyList())).thenReturn(List.of(foodDto));
 
         Nutriments nutriments = Nutriments.builder()
                 .calories(BigDecimal.valueOf(200))
@@ -95,67 +97,45 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
         Long userId = 1L;
         LocalDate today = LocalDate.now();
 
-        Pageable pageable = PageRequest.of(0, 20);
-        String cacheKey = "user:intakes::" + userId + ":date:"
-                + today + ":page:" + pageable.getPageNumber();
+        intakeService.findByDate(today, userId);
 
-        redisTemplate.opsForValue().set(cacheKey, "cached_value");
-        assertThat(redisTemplate.hasKey(cacheKey)).isTrue();
+        Set<String> keysBefore = redisTemplate.keys(CacheConstants.USER_INTAKES + "*");
+        assertThat(keysBefore).isNotEmpty();
 
-        IntakeRequestDto intakeRequestDto = IntakeRequestDto.builder()
+        IntakeRequestDto request = IntakeRequestDto.builder()
                 .amount(100)
-                .date(LocalDate.now())
+                .date(today)
                 .intakePeriod(IntakePeriod.SNACK)
                 .foodId("12345678").build();
 
         // When
-        intakeService.save(intakeRequestDto, userId);
+        intakeService.save(request, userId);
 
         // Then
-        assertThat(redisTemplate.hasKey(cacheKey)).isFalse();
+        Set<String> keysAfter = redisTemplate.keys(CacheConstants.USER_INTAKES + "*");
+        assertThat(keysAfter).isEmpty();
     }
 
     @Test
     @DisplayName("Should use cache on second call")
     void findByDate_shouldUseCacheOnSecondCall() {
-        // Given
-        Long userId = 1L;
-        Pageable pageable = Pageable.ofSize(20);
-
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
         // When
-        CacheablePage<IntakeResponseDto> intakes1 = intakeService
-                .findByDate(null, userId, pageable);
-        verify(intakeRepository, times(1)).findByUserId(eq(userId), any());
-        verify(intakeRepository, never()).findByUserIdAndDate(anyLong(), any(), any());
+        List<IntakeResponseDto> intakes1 = intakeService.findByDate(today, userId);
+        verify(intakeRepository, times(1)).findByUserIdAndDate(anyLong(), any());
 
-        Object cached1 = redisTemplate.opsForValue().get("user:intakes::user:"
-                + userId + ":all:page:0");
-        assertThat(cached1).isNotNull();
-
-        CacheablePage<IntakeResponseDto> intakes2 = objectMapper
-                .convertValue(cached1, new TypeReference<>() { });
-        verify(intakeRepository, times(1)).findByUserId(eq(userId), any());
-        verify(intakeRepository, never()).findByUserIdAndDate(anyLong(), any(), any());
+        List<IntakeResponseDto> intakes2 = intakeService.findByDate(today, userId);
+        verify(intakeRepository, times(1)).findByUserIdAndDate(anyLong(), any());
 
         // Then
-        assertThat(intakes1.getTotalElements()).isEqualTo(intakes2.getTotalElements());
+        assertThat(intakes1).hasSize(intakes2.size());
+        assertThat(intakes1.getFirst().getFoodName()).isEqualTo(intakes2.getFirst().getFoodName());
     }
 
     @Test
     @DisplayName("Should clear cache")
     void update_shouldClearCache() {
-        // Given
-        Long userId = 1L;
-        LocalDate today = LocalDate.now();
-
-        Pageable pageable = PageRequest.of(0, 20);
-        String cacheKey = "user:intakes::user:" + userId + ":date:" + today
-                + ":page:" + pageable.getPageNumber();
-
-        redisTemplate.opsForValue().set(cacheKey, "cached_value");
-        assertThat(redisTemplate.hasKey(cacheKey)).isTrue();
+        intakeService.findByDate(today, userId);
+        assertThat(redisTemplate.keys(CacheConstants.USER_INTAKES + "*")).isNotEmpty();
 
         UpdateIntakeRequestDto intakeRequest = UpdateIntakeRequestDto.builder()
                 .amount(200)
@@ -165,49 +145,19 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
         intakeService.update(intakeId, intakeRequest, userId);
 
         // Then
-        assertThat(redisTemplate.hasKey(cacheKey)).isFalse();
+        assertThat(redisTemplate.keys(CacheConstants.USER_INTAKES + "*")).isEmpty();
     }
 
     @Test
     @DisplayName("Should clear cache")
     void deleteById_shouldClearCache() {
-        // Given
-        Long id = 1L;
-        Long userId = 1L;
-        LocalDate today = LocalDate.now();
-
-        Pageable pageable = PageRequest.of(0, 20);
-        String cacheKey = "user:intakes::user:" + userId + ":date:" + today
-                + ":page:" + pageable.getPageNumber();
-
-        redisTemplate.opsForValue().set(cacheKey, "cached_value");
-        assertThat(redisTemplate.hasKey(cacheKey)).isTrue();
+        intakeService.findByDate(today, userId);
+        assertThat(redisTemplate.keys(CacheConstants.USER_INTAKES + "*")).isNotEmpty();
 
         // When
-        intakeService.deleteById(id, userId);
+        intakeService.deleteById(intakeId, userId);
 
         // Then
-        assertThat(redisTemplate.hasKey(cacheKey)).isFalse();
-    }
-
-    @Test
-    @DisplayName("Should clear cache")
-    void deleteUserIntakesRecursively_shouldClearCache() {
-        // Given
-        Long userId = 1L;
-        LocalDate today = LocalDate.now();
-
-        Pageable pageable = PageRequest.of(0, 20);
-        String cacheKey = "user:intakes::user:" + userId + ":date:"
-                + today + ":page:" + pageable.getPageNumber();
-
-        redisTemplate.opsForValue().set(cacheKey, "cached_value");
-        assertThat(redisTemplate.hasKey(cacheKey)).isTrue();
-
-        // When
-        intakeService.deleteUserIntakesRecursively(userId);
-
-        // Then
-        assertThat(redisTemplate.hasKey(cacheKey)).isFalse();
+        assertThat(redisTemplate.keys(CacheConstants.USER_INTAKES + "*")).isEmpty();
     }
 }

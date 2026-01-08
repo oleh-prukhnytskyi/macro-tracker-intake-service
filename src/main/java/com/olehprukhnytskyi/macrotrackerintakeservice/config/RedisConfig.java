@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.BigDecimalJsonSerializer;
+import com.olehprukhnytskyi.macrotrackerintakeservice.util.CacheConstants;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
@@ -76,7 +77,7 @@ public class RedisConfig {
                         .fromSerializer(serializer));
 
         Map<String, RedisCacheConfiguration> configs = new HashMap<>();
-        configs.put("user:intakes", defaultConfig.entryTtl(Duration.ofHours(6)));
+        configs.put(CacheConstants.USER_INTAKES, defaultConfig.entryTtl(Duration.ofHours(6)));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)

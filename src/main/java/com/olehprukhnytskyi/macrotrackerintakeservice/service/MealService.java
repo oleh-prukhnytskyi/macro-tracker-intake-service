@@ -15,6 +15,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.model.MealTemplateItem;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.MealTemplateRepository;
+import com.olehprukhnytskyi.macrotrackerintakeservice.util.CacheConstants;
 import com.olehprukhnytskyi.util.IntakePeriod;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -24,8 +25,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,10 +38,12 @@ public class MealService {
     private final IntakeRepository intakeRepository;
     private final MealTemplateRepository mealTemplateRepository;
     private final IntakeMapper intakeMapper;
+    private final CacheManager cacheManager;
     private final NutrimentsMapper nutrimentsMapper;
     private final FoodClientService foodClientService;
 
     @Transactional
+    @CacheEvict(value = CacheConstants.MEAL_TEMPLATES, key = "#userId")
     public Long createTemplate(MealTemplateRequestDto request, Long userId) {
         log.info("Creating meal template '{}' for userId={}", request.getName(), userId);
         MealTemplate template = MealTemplate.builder()
@@ -51,11 +55,8 @@ public class MealService {
         return mealTemplateRepository.save(template).getId();
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
-    })
     @Transactional
+    @CacheEvict(value = CacheConstants.USER_INTAKES, key = "#userId + ':' + #date")
     public List<IntakeResponseDto> applyTemplate(Long templateId, LocalDate date,
                                                  IntakePeriod period, Long userId) {
         log.info("Applying template id={} for userId={} on date={}", templateId, userId, date);
@@ -71,14 +72,24 @@ public class MealService {
         return savedIntakes.stream().map(intakeMapper::toDto).toList();
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
-    })
     @Transactional
     public void revertIntakeGroup(String mealGroupId, Long userId) {
         log.info("Reverting intake group {} for user {}", mealGroupId, userId);
+        intakeRepository.findFirstByMealGroupIdAndUserId(mealGroupId, userId)
+                .ifPresent(intake -> manualEvictUserIntakes(userId, intake.getDate()));
         intakeRepository.deleteByMealGroupIdAndUserId(mealGroupId, userId);
+    }
+
+    private void manualEvictUserIntakes(Long userId, LocalDate date) {
+        String key = userId + ":" + date;
+        try {
+            Cache cache = cacheManager.getCache(CacheConstants.USER_INTAKES);
+            if (cache != null) {
+                cache.evict(key);
+            }
+        } catch (Exception e) {
+            log.error("Failed to evict cache for key {}", key, e);
+        }
     }
 
     private List<Intake> createIntakesFromTemplateItem(List<MealTemplateItem> items, LocalDate date,

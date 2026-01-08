@@ -9,7 +9,6 @@ import com.olehprukhnytskyi.exception.NotFoundException;
 import com.olehprukhnytskyi.exception.error.CommonErrorCode;
 import com.olehprukhnytskyi.exception.error.FoodErrorCode;
 import com.olehprukhnytskyi.exception.error.IntakeErrorCode;
-import com.olehprukhnytskyi.macrotrackerintakeservice.dto.CacheablePage;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
@@ -18,15 +17,17 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.producer.UserEventProducer;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
+import com.olehprukhnytskyi.macrotrackerintakeservice.util.CacheConstants;
 import feign.FeignException;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,14 +37,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class IntakeService {
     private static final int DELETE_BATCH_SIZE = 1000;
     private final IntakeRepository intakeRepository;
+    private final CacheManager cacheManager;
     private final IntakeMapper intakeMapper;
     private final FoodClientService foodClientService;
     private final UserEventProducer userEventProducer;
 
-    @Caching(evict = {
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
-    })
+    @CacheEvict(value = CacheConstants.USER_INTAKES, key = "#userId + ':' + #intakeRequest.date")
     @Transactional
     public IntakeResponseDto save(IntakeRequestDto intakeRequest, Long userId) {
         log.info("Saving intake for userId={}", userId);
@@ -69,26 +68,18 @@ public class IntakeService {
         }
     }
 
-    @Cacheable(
-            value = "user:intakes",
-            key = "'user:' + #userId + ( #date != null ? ':date:'"
-                    + " + #date.toString() : ':all' ) + ':page:' + #pageable.pageNumber"
-    )
-    public CacheablePage<IntakeResponseDto> findByDate(LocalDate date, Long userId,
-                                              Pageable pageable) {
+    @Cacheable(value = CacheConstants.USER_INTAKES, key = "#userId + ':' + #date")
+    public List<IntakeResponseDto> findByDate(LocalDate date, Long userId) {
         log.debug("Fetching intake list for userId={} date={}", userId, date);
-        Page<Intake> intakes = (date != null)
-                ? intakeRepository.findByUserIdAndDate(userId, date, pageable)
-                : intakeRepository.findByUserId(userId, pageable);
-        Page<IntakeResponseDto> dtoPage = intakes.map(intakeMapper::toDto);
-        log.debug("Fetched {} intake records for userId={}", dtoPage.getNumberOfElements(), userId);
-        return CacheablePage.fromPage(dtoPage);
+        List<Intake> intakes = (date != null)
+                ? intakeRepository.findByUserIdAndDate(userId, date)
+                : intakeRepository.findByUserId(userId);
+        log.debug("Fetched {} intake records for userId={}", intakes.size(), userId);
+        return intakes.stream()
+                .map(intakeMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
-    })
     @Transactional
     public IntakeResponseDto update(Long id, UpdateIntakeRequestDto intakeRequest,
                                     Long userId) {
@@ -96,6 +87,7 @@ public class IntakeService {
         Intake intake = intakeRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new NotFoundException(IntakeErrorCode.INTAKE_NOT_FOUND,
                         "Intake not found"));
+        manualEvict(userId, intake.getDate());
         intakeMapper.updateFromDto(intake, intakeRequest);
         int oldAmount = intake.getAmount();
         int newAmount = intakeRequest.getAmount();
@@ -107,17 +99,15 @@ public class IntakeService {
         return intakeMapper.toDto(saved);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId"),
-            @CacheEvict(value = "user:intakes", key = "'user:' + #userId + ':*'", allEntries = true)
-    })
     @Transactional
     public void deleteById(Long id, Long userId) {
         log.info("Deleting intake id={} for userId={}", id, userId);
-        intakeRepository.deleteByIdAndUserId(id, userId);
+        intakeRepository.findByIdAndUserId(id, userId).ifPresent(intake -> {
+            manualEvict(userId, intake.getDate());
+            intakeRepository.delete(intake);
+        });
     }
 
-    @CacheEvict(value = "user:intakes", key = "'user:' + #userId", allEntries = true)
     @Transactional
     public void deleteUserIntakesRecursively(Long userId) {
         log.info("Processing batch deletion for user: {}", userId);
@@ -129,6 +119,18 @@ public class IntakeService {
             userEventProducer.sendUserDeletedEvent(new UserDeletedEvent(userId));
         } else {
             log.info("Data cleanup completed for user {}", userId);
+        }
+    }
+
+    private void manualEvict(Long userId, LocalDate date) {
+        String key = userId + ":" + date;
+        try {
+            Cache cache = cacheManager.getCache(CacheConstants.USER_INTAKES);
+            if (cache != null) {
+                cache.evict(key);
+            }
+        } catch (Exception e) {
+            log.error("Failed to evict cache", e);
         }
     }
 }

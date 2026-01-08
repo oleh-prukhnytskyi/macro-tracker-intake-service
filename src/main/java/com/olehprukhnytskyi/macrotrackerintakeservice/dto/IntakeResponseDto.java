@@ -17,6 +17,10 @@ public class IntakeResponseDto {
     @Schema(description = "Intake record ID", example = "12345")
     private Long id;
 
+    @Schema(
+            description = "ID grouping multiple foods consumed in one meal (e.g., from a template)",
+            example = "987fc3-a1b2-44"
+    )
     private String mealGroupId;
 
     @Schema(description = "Food name", example = "Chicken Breast")

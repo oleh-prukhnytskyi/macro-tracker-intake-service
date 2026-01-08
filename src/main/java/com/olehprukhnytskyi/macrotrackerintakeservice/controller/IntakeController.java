@@ -1,9 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.controller;
 
 import com.olehprukhnytskyi.annotation.Idempotent;
-import com.olehprukhnytskyi.dto.PagedResponse;
-import com.olehprukhnytskyi.dto.Pagination;
-import com.olehprukhnytskyi.macrotrackerintakeservice.dto.CacheablePage;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
@@ -13,11 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,25 +51,15 @@ public class IntakeController {
             """
     )
     @GetMapping
-    public ResponseEntity<PagedResponse<IntakeResponseDto>> findByDate(
+    public ResponseEntity<List<IntakeResponseDto>> findByDate(
             @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate date,
-            @ParameterObject @PageableDefault(size = 100) Pageable pageable) {
+            LocalDate date) {
         log.debug("Fetching intake records for userId={} date={}", userId, date);
-        CacheablePage<IntakeResponseDto> page = intakeService
-                .findByDate(date, userId, pageable);
-        PagedResponse<IntakeResponseDto> response = new PagedResponse<>(
-                page.getContent(),
-                new Pagination(
-                        pageable.getPageNumber() * pageable.getPageSize(),
-                        pageable.getPageSize(),
-                        (int) page.getTotalElements()
-                )
-        );
-        log.debug("Fetched {} intake records for userId={}", page.getContent().size(), userId);
-        return ResponseEntity.ok(response);
+        List<IntakeResponseDto> intakes = intakeService.findByDate(date, userId);
+        log.debug("Fetched {} intake records for userId={}", intakes.size(), userId);
+        return ResponseEntity.ok(intakes);
     }
 
     @Operation(

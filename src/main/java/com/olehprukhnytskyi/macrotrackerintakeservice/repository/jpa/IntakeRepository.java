@@ -2,9 +2,8 @@ package com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa;
 
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,9 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface IntakeRepository extends JpaRepository<Intake, Long> {
-    Page<Intake> findByUserIdAndDate(Long userId, LocalDate date, Pageable pageable);
+    List<Intake> findByUserIdAndDate(Long userId, LocalDate date);
 
-    Page<Intake> findByUserId(Long userId, Pageable pageable);
+    List<Intake> findByUserId(Long userId);
 
     Optional<Intake> findByIdAndUserId(Long id, Long userId);
 
@@ -43,4 +42,6 @@ public interface IntakeRepository extends JpaRepository<Intake, Long> {
             @Param("groupId") String groupId,
             @Param("userId") Long userId
     );
+
+    Optional<Intake> findFirstByMealGroupIdAndUserId(String mealGroupId, Long userId);
 }

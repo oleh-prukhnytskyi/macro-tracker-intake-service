@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.olehprukhnytskyi.dto.PagedResponse;
 import com.olehprukhnytskyi.macrotrackerintakeservice.config.AbstractIntegrationTest;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
@@ -26,6 +25,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
 import com.olehprukhnytskyi.util.CustomHeaders;
 import com.olehprukhnytskyi.util.IntakePeriod;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -87,13 +87,13 @@ class IntakeControllerTest extends AbstractIntegrationTest {
 
         // Then
         String jsonResponse = mvcResult.getResponse().getContentAsString();
-        PagedResponse<IntakeResponseDto> response = objectMapper.readValue(
+        List<IntakeResponseDto> response = objectMapper.readValue(
                 jsonResponse,
                 objectMapper.getTypeFactory()
-                        .constructParametricType(PagedResponse.class, IntakeResponseDto.class)
+                        .constructParametricType(List.class, IntakeResponseDto.class)
         );
 
-        assertThat(response.getData()).isEmpty();
+        assertThat(response).isEmpty();
     }
 
     @Test
@@ -114,19 +114,18 @@ class IntakeControllerTest extends AbstractIntegrationTest {
 
         // Then
         String jsonResponse = mvcResult.getResponse().getContentAsString();
-        PagedResponse<IntakeResponseDto> response = objectMapper.readValue(
+        List<IntakeResponseDto> response = objectMapper.readValue(
                 jsonResponse,
                 objectMapper.getTypeFactory()
-                        .constructParametricType(PagedResponse.class, IntakeResponseDto.class)
+                        .constructParametricType(List.class, IntakeResponseDto.class)
         );
 
-        assertThat(response.getData())
+        assertThat(response)
                 .extracting(IntakeResponseDto::getFoodName)
                 .contains("Potato");
-        assertThat(response.getData())
+        assertThat(response)
                 .extracting(IntakeResponseDto::getDate)
                 .contains(LocalDate.parse(date));
-        assertThat(response.getPagination().getLimit()).isEqualTo(100);
     }
 
     @Test
@@ -160,13 +159,13 @@ class IntakeControllerTest extends AbstractIntegrationTest {
 
         // Then
         String jsonResponse = mvcResult.getResponse().getContentAsString();
-        PagedResponse<IntakeResponseDto> response = objectMapper.readValue(
+        List<IntakeResponseDto> response = objectMapper.readValue(
                 jsonResponse,
                 objectMapper.getTypeFactory()
-                        .constructParametricType(PagedResponse.class, IntakeResponseDto.class)
+                        .constructParametricType(List.class, IntakeResponseDto.class)
         );
 
-        assertThat(response.getData()).isNotEmpty();
+        assertThat(response).isNotEmpty();
     }
 
     @Test

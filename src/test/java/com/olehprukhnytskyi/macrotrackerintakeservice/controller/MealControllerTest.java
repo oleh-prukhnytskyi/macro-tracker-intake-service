@@ -30,7 +30,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -290,8 +289,7 @@ class MealControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isNoContent());
 
         // Then
-        assertThat(intakeRepository.findByUserId(victimId, Pageable.unpaged())
-                .getTotalElements()).isEqualTo(1);
+        assertThat(intakeRepository.findByUserId(victimId).size()).isEqualTo(1);
     }
 
     private FoodDto createMockFood(String id, String name, double kcal) {

@@ -7,6 +7,7 @@ import com.olehprukhnytskyi.util.CustomHeaders;
 import com.olehprukhnytskyi.util.IntakePeriod;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
@@ -28,6 +29,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/meals")
+@Tag(
+        name = "Meal Templates API",
+        description = "Manage reusable meal templates (grouping multiple food items)"
+)
 public class MealController {
     private final MealService mealService;
 
