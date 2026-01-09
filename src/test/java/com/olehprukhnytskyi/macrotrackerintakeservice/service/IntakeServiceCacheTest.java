@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.NutrimentsDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
+import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
@@ -37,6 +39,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 class IntakeServiceCacheTest extends AbstractIntegrationTest {
     @MockitoBean
     private FoodClientService foodClientService;
+    @MockitoBean
+    private IntakeMapper intakeMapper;
     @MockitoSpyBean
     private IntakeRepository intakeRepository;
 
@@ -108,6 +112,16 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
                 .intakePeriod(IntakePeriod.SNACK)
                 .foodId("12345678").build();
 
+        Intake intake = Intake.builder()
+                .userId(1L)
+                .foodName("apple")
+                .amount(100)
+                .date(today)
+                .foodId("12345678")
+                .build();
+
+        when(intakeMapper.toModel(any())).thenReturn(intake);
+
         // When
         intakeService.save(request, userId);
 
@@ -119,6 +133,16 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Should use cache on second call")
     void findByDate_shouldUseCacheOnSecondCall() {
+        // Given
+        Intake mockIntake = new Intake();
+        List<Intake> intakeEntities = List.of(mockIntake);
+
+        IntakeResponseDto mockDto = new IntakeResponseDto();
+        mockDto.setFoodName("Apple");
+
+        doReturn(intakeEntities).when(intakeRepository).findByUserIdAndDate(anyLong(), any());
+        when(intakeMapper.toDto(any(Intake.class))).thenReturn(mockDto);
+
         // When
         List<IntakeResponseDto> intakes1 = intakeService.findByDate(today, userId);
         verify(intakeRepository, times(1)).findByUserIdAndDate(anyLong(), any());

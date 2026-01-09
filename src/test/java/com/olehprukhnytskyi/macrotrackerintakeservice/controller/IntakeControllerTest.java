@@ -183,6 +183,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
 
         FoodDto foodDto = FoodDto.builder()
                 .productName("Oatmeal")
+                .userId(1L)
                 .nutriments(new NutrimentsDto())
                 .build();
 
@@ -230,6 +231,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
 
         FoodDto foodDto = FoodDto.builder()
                 .productName("Oatmeal")
+                .userId(1L)
                 .nutriments(new NutrimentsDto())
                 .build();
 
