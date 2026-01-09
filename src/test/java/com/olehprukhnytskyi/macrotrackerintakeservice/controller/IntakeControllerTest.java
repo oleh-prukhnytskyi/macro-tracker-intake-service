@@ -252,6 +252,54 @@ class IntakeControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("When creating intake from Global Food (userId=null), "
+                 + "should NOT overwrite userId with null")
+    void addIntake_whenFoodIsGlobal_shouldPersistUserIdCorrectly() throws Exception {
+        // Given
+        Long headerUserId = 101L;
+        String globalFoodId = "global-apple-id";
+
+        IntakeRequestDto requestDto = IntakeRequestDto.builder()
+                .foodId(globalFoodId)
+                .amount(150)
+                .date(LocalDate.now())
+                .intakePeriod(IntakePeriod.SNACK)
+                .build();
+
+        FoodDto globalFoodDto = FoodDto.builder()
+                .id(globalFoodId)
+                .productName("Global Apple")
+                .userId(null)
+                .nutriments(new NutrimentsDto())
+                .build();
+
+        when(foodClientService.getFoodById(globalFoodId)).thenReturn(globalFoodDto);
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        // When
+        mockMvc.perform(
+                        post("/api/intake")
+                                .header(CustomHeaders.X_USER_ID, headerUserId)
+                                .header(CustomHeaders.X_REQUEST_ID, "req-integrity-check")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(requestDto))
+                )
+                .andExpect(status().isCreated());
+
+        // Then
+        List<Intake> savedIntakes = intakeRepository.findAll();
+        Intake targetIntake = savedIntakes.stream()
+                .filter(i -> globalFoodId.equals(i.getFoodId()) && i.getAmount() == 150)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Intake was not saved to DB"));
+        assertThat(targetIntake.getUserId())
+                .as("User ID must correspond to X-USER-ID header and not be overwritten by FoodDto")
+                .isNotNull()
+                .isEqualTo(headerUserId);
+    }
+
+    @Test
     @DisplayName("When request is valid, should update intake")
     void updateIntake_whenValidRequest_shouldUpdateIntake() throws Exception {
         // Given
