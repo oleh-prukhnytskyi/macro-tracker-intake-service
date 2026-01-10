@@ -109,4 +109,18 @@ public class MealController {
         log.debug("Intake group {} reverted successfully", mealGroupId);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(
+            summary = "Delete meal template",
+            description = "Permanently deletes a created meal template.")
+    @DeleteMapping("/template/{templateId}")
+    public ResponseEntity<Void> deleteTemplate(
+            @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
+            @Parameter(description = "ID of the template to delete", required = true)
+            @PathVariable Long templateId) {
+        log.info("Request to delete template id={} for userId={}", templateId, userId);
+        mealService.deleteTemplate(templateId, userId);
+        log.debug("Template id={} deleted successfully for userId={}", templateId, userId);
+        return ResponseEntity.noContent().build();
+    }
 }

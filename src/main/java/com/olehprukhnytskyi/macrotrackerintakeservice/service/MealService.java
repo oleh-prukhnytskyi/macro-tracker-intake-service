@@ -92,6 +92,16 @@ public class MealService {
         intakeRepository.deleteByMealGroupIdAndUserId(mealGroupId, userId);
     }
 
+    @Transactional
+    @CacheEvict(value = CacheConstants.MEAL_TEMPLATES, key = "#userId")
+    public void deleteTemplate(Long templateId, Long userId) {
+        log.info("Deleting template id={} for userId={}", templateId, userId);
+        MealTemplate template = mealTemplateRepository.findByIdAndUserId(templateId, userId)
+                .orElseThrow(() -> new NotFoundException(IntakeErrorCode.INTAKE_NOT_FOUND,
+                        "Template not found or does not belong to user"));
+        mealTemplateRepository.delete(template);
+    }
+
     private void manualEvictUserIntakes(Long userId, LocalDate date) {
         String key = userId + ":" + date;
         try {
