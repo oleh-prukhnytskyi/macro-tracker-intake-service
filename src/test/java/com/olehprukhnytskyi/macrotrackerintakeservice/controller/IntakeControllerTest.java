@@ -19,9 +19,11 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.NutrimentsDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
+import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.NutrimentsMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
+import com.olehprukhnytskyi.macrotrackerintakeservice.util.IntakeUtils;
 import com.olehprukhnytskyi.util.CustomHeaders;
 import com.olehprukhnytskyi.util.IntakePeriod;
 import java.time.LocalDate;
@@ -49,6 +51,8 @@ class IntakeControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private NutrimentsMapper nutrimentsMapper;
 
     @MockitoBean
     private RedisTemplate<String, String> redisTemplate;
@@ -303,28 +307,28 @@ class IntakeControllerTest extends AbstractIntegrationTest {
     @DisplayName("When request is valid, should update intake")
     void updateIntake_whenValidRequest_shouldUpdateIntake() throws Exception {
         // Given
-        Long userId = 1L;
-        Long intakeId = getRandomIntakeFromDb().getId();
-
         UpdateIntakeRequestDto requestDto = UpdateIntakeRequestDto.builder()
-                .amount(100)
+                .amount(200)
                 .intakePeriod(IntakePeriod.BREAKFAST)
                 .build();
         String requestJson = objectMapper.writeValueAsString(requestDto);
 
+        Intake intake = getRandomIntakeFromDb();
+        IntakeUtils.recalculateExistingIntake(intake, 200);
         IntakeResponseDto responseDto = IntakeResponseDto.builder()
-                .id(intakeId)
+                .id(intake.getId())
                 .foodName("Potato")
                 .date(LocalDate.parse("2025-09-06"))
-                .amount(100)
+                .amount(200)
+                .nutriments(nutrimentsMapper.toDto(intake.getNutriments()))
                 .intakePeriod(IntakePeriod.BREAKFAST)
                 .build();
         String expected = objectMapper.writeValueAsString(responseDto);
 
         // When
         mockMvc.perform(
-                        patch("/api/intake/{id}", intakeId)
-                                .header(CustomHeaders.X_USER_ID, userId)
+                        patch("/api/intake/{id}", intake.getId())
+                                .header(CustomHeaders.X_USER_ID, 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestJson)
                 )

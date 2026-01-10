@@ -88,9 +88,9 @@ public class IntakeService {
                 .orElseThrow(() -> new NotFoundException(IntakeErrorCode.INTAKE_NOT_FOUND,
                         "Intake not found"));
         manualEvict(userId, intake.getDate());
-        intakeMapper.updateFromDto(intake, intakeRequest);
         int oldAmount = intake.getAmount();
         int newAmount = intakeRequest.getAmount();
+        intakeMapper.updateFromDto(intake, intakeRequest);
         if (oldAmount != newAmount) {
             recalculateExistingIntake(intake, newAmount);
         }
