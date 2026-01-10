@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -122,5 +123,22 @@ public class MealController {
         mealService.deleteTemplate(templateId, userId);
         log.debug("Template id={} deleted successfully for userId={}", templateId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Update meal template",
+            description = """
+            Updates an existing template: renames it, changes amounts,
+            adds new items or removes existing ones.
+            """)
+    @PutMapping("/templates/{templateId}")
+    public ResponseEntity<Void> updateTemplate(
+            @RequestHeader(CustomHeaders.X_USER_ID) Long userId,
+            @PathVariable Long templateId,
+            @Valid @RequestBody MealTemplateRequestDto request) {
+        log.info("Request to update template id={} for userId={}", templateId, userId);
+        mealService.updateTemplate(templateId, request, userId);
+        log.debug("Template id={} updated successfully", templateId);
+        return ResponseEntity.ok().build();
     }
 }

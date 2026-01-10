@@ -1,6 +1,7 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.service;
 
 import static com.olehprukhnytskyi.macrotrackerintakeservice.util.IntakeUtils.calculateNutriments;
+import static com.olehprukhnytskyi.macrotrackerintakeservice.util.IntakeUtils.updateTemplateItemAmount;
 
 import com.olehprukhnytskyi.exception.NotFoundException;
 import com.olehprukhnytskyi.exception.error.IntakeErrorCode;
@@ -100,6 +101,49 @@ public class MealService {
                 .orElseThrow(() -> new NotFoundException(IntakeErrorCode.INTAKE_NOT_FOUND,
                         "Template not found or does not belong to user"));
         mealTemplateRepository.delete(template);
+    }
+
+    @Transactional
+    @CacheEvict(value = CacheConstants.MEAL_TEMPLATES, key = "#userId")
+    public void updateTemplate(Long templateId, MealTemplateRequestDto request, Long userId) {
+        log.info("Updating template id={} for userId={}", templateId, userId);
+        MealTemplate template = mealTemplateRepository.findByIdAndUserId(templateId, userId)
+                .orElseThrow(() -> new NotFoundException(IntakeErrorCode.INTAKE_NOT_FOUND,
+                        "Template not found"));
+        template.setName(request.getName());
+        Map<String, Integer> incomingItemsMap = request.getItems().stream()
+                .collect(Collectors.toMap(
+                        MealTemplateRequestDto.TemplateItemDto::getFoodId,
+                        MealTemplateRequestDto.TemplateItemDto::getAmount
+                ));
+        template.getItems().removeIf(item -> !incomingItemsMap.containsKey(item.getFoodId()));
+        List<String> existingFoodIds = new ArrayList<>();
+        for (MealTemplateItem item : template.getItems()) {
+            Integer newAmount = incomingItemsMap.get(item.getFoodId());
+            existingFoodIds.add(item.getFoodId());
+            if (item.getAmount() != newAmount) {
+                updateTemplateItemAmount(item, newAmount);
+            }
+        }
+        List<String> newFoodIds = incomingItemsMap.keySet().stream()
+                .filter(id -> !existingFoodIds.contains(id))
+                .toList();
+        if (!newFoodIds.isEmpty()) {
+            List<FoodDto> newFoods = foodClientService.getFoodsByIds(newFoodIds);
+            for (FoodDto food : newFoods) {
+                Integer amount = incomingItemsMap.get(food.getId());
+                Nutriments calculatedNutriments = calculateNutriments(food.getNutriments(), amount);
+                MealTemplateItem newItem = MealTemplateItem.builder()
+                        .template(template)
+                        .foodId(food.getId())
+                        .foodName(food.getProductName())
+                        .amount(amount)
+                        .nutriments(calculatedNutriments)
+                        .build();
+                template.getItems().add(newItem);
+            }
+        }
+        mealTemplateRepository.save(template);
     }
 
     private void manualEvictUserIntakes(Long userId, LocalDate date) {

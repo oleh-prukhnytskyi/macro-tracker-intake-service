@@ -2,6 +2,7 @@ package com.olehprukhnytskyi.macrotrackerintakeservice.util;
 
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.NutrimentsDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
+import com.olehprukhnytskyi.macrotrackerintakeservice.model.MealTemplateItem;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,6 +19,15 @@ public class IntakeUtils {
                 calculate(baseNutriments.getFat(), amount),
                 calculate(baseNutriments.getProtein(), amount)
         );
+    }
+
+    public static void updateTemplateItemAmount(MealTemplateItem item, int newAmount) {
+        item.setAmount(newAmount);
+        Nutriments n = item.getNutriments();
+        n.setCalories(IntakeUtils.calculate(n.getCaloriesPer100(), newAmount));
+        n.setCarbohydrates(IntakeUtils.calculate(n.getCarbohydratesPer100(), newAmount));
+        n.setFat(IntakeUtils.calculate(n.getFatPer100(), newAmount));
+        n.setProtein(IntakeUtils.calculate(n.getProteinPer100(), newAmount));
     }
 
     public static void recalculateExistingIntake(Intake intake, int newAmount) {
