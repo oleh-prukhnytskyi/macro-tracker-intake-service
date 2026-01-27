@@ -1,6 +1,7 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.dto;
 
 import com.olehprukhnytskyi.util.IntakePeriod;
+import com.olehprukhnytskyi.util.UnitType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -33,6 +34,10 @@ public class IntakeRequestDto {
     @Min(1)
     @NotNull
     private int amount;
+
+    @Schema(description = "Available measurement units for the product", example = "GRAMS")
+    @Builder.Default
+    private UnitType unitType = UnitType.GRAMS;
 
     @Schema(
             description = "Date of intake (user's local date, yyyy-MM-dd)",

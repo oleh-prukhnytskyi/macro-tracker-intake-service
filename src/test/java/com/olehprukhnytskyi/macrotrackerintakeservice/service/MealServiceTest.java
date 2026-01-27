@@ -24,7 +24,10 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.model.MealTemplateItem;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.MealTemplateRepository;
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.strategy.GramsCalculationStrategy;
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.strategy.NutrientStrategyFactory;
 import com.olehprukhnytskyi.util.IntakePeriod;
+import com.olehprukhnytskyi.util.UnitType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -51,6 +54,8 @@ class MealServiceTest {
     private NutrimentsMapper nutrimentsMapper;
     @Mock
     private FoodClientService foodClientService;
+    @Mock
+    private NutrientStrategyFactory nutrientStrategyFactory;
 
     @InjectMocks
     private MealService mealService;
@@ -62,16 +67,24 @@ class MealServiceTest {
         String foodId = "f1";
         MealTemplateRequestDto request = new MealTemplateRequestDto();
         request.setName("My Breakfast");
-        request.setItems(List.of(new MealTemplateRequestDto.TemplateItemDto(foodId, 100)));
+        request.setItems(List.of(
+                MealTemplateRequestDto.TemplateItemDto.builder()
+                        .foodId(foodId)
+                        .unitType(UnitType.GRAMS)
+                        .amount(100)
+                        .build()
+        ));
 
-        NutrimentsDto mockNutrimentsDto = mock(NutrimentsDto.class);
         FoodDto foodDto = FoodDto.builder()
                 .id(foodId)
                 .productName("Oats")
-                .nutriments(mockNutrimentsDto)
+                .nutriments(new NutrimentsDto())
                 .build();
 
         when(foodClientService.getFoodsByIds(List.of(foodId))).thenReturn(List.of(foodDto));
+        when(nutrientStrategyFactory.getStrategy(UnitType.GRAMS))
+                .thenReturn(new GramsCalculationStrategy());
+        when(nutrimentsMapper.fromFoodNutriments(any())).thenReturn(new Nutriments());
 
         MealTemplate savedTemplateMock = mock(MealTemplate.class);
         when(savedTemplateMock.getId()).thenReturn(10L);
@@ -101,8 +114,14 @@ class MealServiceTest {
         MealTemplateRequestDto request = new MealTemplateRequestDto();
         request.setName("Partial");
         request.setItems(List.of(
-                new MealTemplateRequestDto.TemplateItemDto("exists", 100),
-                new MealTemplateRequestDto.TemplateItemDto("missing", 50)
+                MealTemplateRequestDto.TemplateItemDto.builder()
+                        .foodId("exists")
+                        .amount(100)
+                        .build(),
+                MealTemplateRequestDto.TemplateItemDto.builder()
+                        .foodId("missing")
+                        .amount(50)
+                        .build()
         ));
 
         FoodDto foodDto = FoodDto.builder()
@@ -117,6 +136,9 @@ class MealServiceTest {
             t.setId(1L);
             return t;
         });
+        when(nutrientStrategyFactory.getStrategy(UnitType.GRAMS))
+                .thenReturn(new GramsCalculationStrategy());
+        when(nutrimentsMapper.fromFoodNutriments(any())).thenReturn(new Nutriments());
 
         // When
         mealService.createTemplate(request, 1L);
@@ -151,10 +173,6 @@ class MealServiceTest {
                 .id(templateId)
                 .userId(userId)
                 .items(List.of(item))
-                .build();
-
-        NutrimentsDto nutrimentsDto = NutrimentsDto.builder()
-                .calories(BigDecimal.valueOf(200))
                 .build();
 
         when(mealTemplateRepository.findByIdAndUserId(templateId, userId))

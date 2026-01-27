@@ -1,9 +1,7 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.service;
 
-import static com.olehprukhnytskyi.macrotrackerintakeservice.util.IntakeUtils.calculateNutriments;
-import static com.olehprukhnytskyi.macrotrackerintakeservice.util.IntakeUtils.recalculateExistingIntake;
-
 import com.olehprukhnytskyi.event.UserDeletedEvent;
+import com.olehprukhnytskyi.exception.BadRequestException;
 import com.olehprukhnytskyi.exception.ExternalServiceException;
 import com.olehprukhnytskyi.exception.NotFoundException;
 import com.olehprukhnytskyi.exception.error.CommonErrorCode;
@@ -14,10 +12,15 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.UpdateIntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
+import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.NutrimentsMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
+import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.producer.UserEventProducer;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.strategy.NutrientCalculationStrategy;
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.strategy.NutrientStrategyFactory;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.CacheConstants;
+import com.olehprukhnytskyi.util.UnitType;
 import feign.FeignException;
 import java.time.LocalDate;
 import java.util.List;
@@ -36,9 +39,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class IntakeService {
     private static final int DELETE_BATCH_SIZE = 1000;
+    private final NutrientStrategyFactory strategyFactory;
     private final IntakeRepository intakeRepository;
     private final CacheManager cacheManager;
     private final IntakeMapper intakeMapper;
+    private final NutrimentsMapper nutrimentsMapper;
     private final FoodClientService foodClientService;
     private final UserEventProducer userEventProducer;
 
@@ -48,12 +53,22 @@ public class IntakeService {
         log.info("Saving intake for userId={}", userId);
         try {
             FoodDto food = foodClientService.getFoodById(intakeRequest.getFoodId());
+            UnitType type = intakeRequest.getUnitType() != null
+                    ? intakeRequest.getUnitType() : UnitType.GRAMS;
+            validateUnitSupported(food, type);
+
             Intake intake = intakeMapper.toModel(intakeRequest);
             intake.setUserId(userId);
             intake.setFoodId(intakeRequest.getFoodId());
+            intake.setUnitType(type);
+
+            NutrientCalculationStrategy strategy = strategyFactory.getStrategy(type);
+            Nutriments calculatedNutriments = nutrimentsMapper
+                    .fromFoodNutriments(food.getNutriments());
+            strategy.calculate(calculatedNutriments, intakeRequest.getAmount());
+            intake.setNutriments(calculatedNutriments);
+
             intakeMapper.updateIntakeFromFoodDto(intake, food);
-            intake.setNutriments(calculateNutriments(food.getNutriments(),
-                    intakeRequest.getAmount()));
             Intake saved = intakeRepository.save(intake);
             log.debug("Intake saved successfully for userId={} intakeId={}", userId, saved.getId());
             return intakeMapper.toDto(saved);
@@ -92,7 +107,9 @@ public class IntakeService {
         int newAmount = intakeRequest.getAmount();
         intakeMapper.updateFromDto(intake, intakeRequest);
         if (oldAmount != newAmount) {
-            recalculateExistingIntake(intake, newAmount);
+            NutrientCalculationStrategy strategy = strategyFactory
+                    .getStrategy(intake.getUnitType());
+            strategy.calculate(intake.getNutriments(), newAmount);
         }
         Intake saved = intakeRepository.save(intake);
         log.debug("Intake updated successfully id={} userId={}", id, userId);
@@ -119,6 +136,17 @@ public class IntakeService {
             userEventProducer.sendUserDeletedEvent(new UserDeletedEvent(userId));
         } else {
             log.info("Data cleanup completed for user {}", userId);
+        }
+    }
+
+    private void validateUnitSupported(FoodDto food, UnitType requestedUnit) {
+        if (food.getAvailableUnits() == null || !food.getAvailableUnits().contains(requestedUnit)) {
+            throw new BadRequestException(CommonErrorCode.VALIDATION_ERROR,
+                    String.format(
+                            "Food '%s' does not support unit type %s. Available types: %s",
+                            food.getProductName(),
+                            requestedUnit,
+                            food.getAvailableUnits()));
         }
     }
 

@@ -1,5 +1,6 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.dto;
 
+import com.olehprukhnytskyi.util.UnitType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,5 +14,6 @@ public class MealTemplateItemDto {
     private String foodId;
     private String foodName;
     private int amount;
+    private UnitType unitType;
     private NutrimentsDto nutriments;
 }

@@ -32,6 +32,23 @@ public class Nutriments {
     private BigDecimal proteinPer100 = BigDecimal.ZERO;
 
     @Builder.Default
+    @Column(name = "calories_per_piece", nullable = false, columnDefinition = "decimal default 0")
+    private BigDecimal caloriesPerPiece = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "carbohydrates_per_piece", nullable = false,
+            columnDefinition = "decimal default 0")
+    private BigDecimal carbohydratesPerPiece = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "fat_per_piece", nullable = false, columnDefinition = "decimal default 0")
+    private BigDecimal fatPerPiece = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "protein_per_piece", nullable = false, columnDefinition = "decimal default 0")
+    private BigDecimal proteinPerPiece = BigDecimal.ZERO;
+
+    @Builder.Default
     @Column(name = "calories_total", nullable = false, columnDefinition = "decimal default 0")
     private BigDecimal calories = BigDecimal.ZERO;
 

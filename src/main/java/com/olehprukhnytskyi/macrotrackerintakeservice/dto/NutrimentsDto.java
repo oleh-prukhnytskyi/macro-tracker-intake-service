@@ -41,4 +41,28 @@ public class NutrimentsDto {
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     @JsonSerialize(using = BigDecimalJsonSerializer.class)
     private BigDecimal carbohydrates = BigDecimal.ZERO;
+
+    @Schema(description = "Calories per piece", example = "120.5", minimum = "0.0")
+    @Builder.Default
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    @JsonSerialize(using = BigDecimalJsonSerializer.class)
+    private BigDecimal caloriesPerPiece = BigDecimal.ZERO;
+
+    @Schema(description = "Fat per piece", example = "2.1", minimum = "0.0")
+    @Builder.Default
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    @JsonSerialize(using = BigDecimalJsonSerializer.class)
+    private BigDecimal fatPerPiece = BigDecimal.ZERO;
+
+    @Schema(description = "Protein per piece", example = "22.5", minimum = "0.0")
+    @Builder.Default
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    @JsonSerialize(using = BigDecimalJsonSerializer.class)
+    private BigDecimal proteinPerPiece = BigDecimal.ZERO;
+
+    @Schema(description = "Carbohydrates per piece", example = "0.0", minimum = "0.0")
+    @Builder.Default
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    @JsonSerialize(using = BigDecimalJsonSerializer.class)
+    private BigDecimal carbohydratesPerPiece = BigDecimal.ZERO;
 }

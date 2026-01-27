@@ -1,6 +1,8 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.dto;
 
+import com.olehprukhnytskyi.util.UnitType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,4 +38,10 @@ public class FoodDto {
     @Schema(description = "Nutrition information")
     @Builder.Default
     private NutrimentsDto nutriments = new NutrimentsDto();
+
+    @Schema(
+            description = "Available measurement units for the product",
+            example = "[\"GRAMS\", \"PIECES\"]"
+    )
+    private List<UnitType> availableUnits;
 }

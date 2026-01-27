@@ -70,8 +70,8 @@ class MealControllerTest extends AbstractIntegrationTest {
         MealTemplateRequestDto request = new MealTemplateRequestDto();
         request.setName("Morning Porridge");
         request.setItems(List.of(
-                new MealTemplateRequestDto.TemplateItemDto(foodId1, 50),
-                new MealTemplateRequestDto.TemplateItemDto(foodId2, 200)
+                MealTemplateRequestDto.TemplateItemDto.builder().foodId(foodId1).amount(50).build(),
+                MealTemplateRequestDto.TemplateItemDto.builder().foodId(foodId2).amount(200).build()
         ));
 
         FoodDto oats = createMockFood(foodId1, "Oats", 350);
@@ -109,7 +109,10 @@ class MealControllerTest extends AbstractIntegrationTest {
         // Given
         MealTemplateRequestDto request = new MealTemplateRequestDto();
         request.setName("Failed Template");
-        request.setItems(List.of(new MealTemplateRequestDto.TemplateItemDto("f1", 100)));
+        request.setItems(List.of(MealTemplateRequestDto.TemplateItemDto.builder()
+                .foodId("f1")
+                .amount(100)
+                .build()));
 
         given(foodClientService.getFoodsByIds(anyList()))
                 .willThrow(new ExternalServiceException(
@@ -317,9 +320,10 @@ class MealControllerTest extends AbstractIntegrationTest {
                 .foodId("f1")
                 .foodName("Food 1")
                 .amount(110)
-                .nutriments(new Nutriments(BigDecimal.valueOf(100), BigDecimal.TEN,
-                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
+                .nutriments(new Nutriments(
+                        BigDecimal.valueOf(100), BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO,
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
                 .build();
 
         MealTemplateItem item2 = MealTemplateItem.builder()
@@ -327,9 +331,10 @@ class MealControllerTest extends AbstractIntegrationTest {
                 .foodId("f2")
                 .foodName("Food 2")
                 .amount(50)
-                .nutriments(new Nutriments(BigDecimal.valueOf(200), BigDecimal.TEN,
-                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
+                .nutriments(new Nutriments(
+                        BigDecimal.valueOf(200), BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO,
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
                 .build();
 
         template.setItems(List.of(item1, item2));

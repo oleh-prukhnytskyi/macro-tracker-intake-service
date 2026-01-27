@@ -1,6 +1,7 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.dto;
 
 import com.olehprukhnytskyi.util.IntakePeriod;
+import com.olehprukhnytskyi.util.UnitType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,9 @@ public class IntakeResponseDto {
 
     @Schema(description = "Consumed amount in grams", example = "150")
     private int amount;
+
+    @Schema(description = "Available measurement units for the product", example = "GRAMS")
+    private UnitType unitType;
 
     @Schema(description = "Consumption date", example = "2024-01-15")
     private LocalDate date;

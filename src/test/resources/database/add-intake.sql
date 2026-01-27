@@ -1,1 +1,1 @@
-insert into intake (amount, food_id, food_name, user_id, date, intake_period) values (10, '1', 'Potato', 1, '2025-09-06', 'SNACK')
+insert into intake (amount, food_id, food_name, user_id, date, intake_period, unit_type, calories_total, carbohydrates_total, fat_total, protein_total, calories_per_100, carbohydrates_per_100, fat_per_100, protein_per_100, calories_per_piece, carbohydrates_per_piece, fat_per_piece, protein_per_piece) values (10, '1', 'Potato', 1, '2025-09-06', 'SNACK', 'PIECES', 50, 60, 70, 80, 1, 2, 3, 4, 5, 6, 7, 8)

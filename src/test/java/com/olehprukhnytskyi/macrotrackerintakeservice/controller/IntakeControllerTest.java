@@ -23,9 +23,10 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.NutrimentsMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.service.FoodClientService;
-import com.olehprukhnytskyi.macrotrackerintakeservice.util.IntakeUtils;
 import com.olehprukhnytskyi.util.CustomHeaders;
 import com.olehprukhnytskyi.util.IntakePeriod;
+import com.olehprukhnytskyi.util.UnitType;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
@@ -178,23 +179,36 @@ class IntakeControllerTest extends AbstractIntegrationTest {
         // Given
         IntakeResponseDto responseDto = IntakeResponseDto.builder()
                 .id(1L)
-                .amount(100)
-                .nutriments(new NutrimentsDto())
+                .amount(200)
+                .nutriments(NutrimentsDto.builder()
+                        .calories(BigDecimal.valueOf(10))
+                        .carbohydrates(BigDecimal.valueOf(12))
+                        .fat(BigDecimal.valueOf(14))
+                        .protein(BigDecimal.valueOf(16))
+                        .build())
                 .date(LocalDate.now())
                 .foodName("Oatmeal")
+                .unitType(UnitType.GRAMS)
                 .intakePeriod(IntakePeriod.SNACK)
                 .build();
 
         FoodDto foodDto = FoodDto.builder()
                 .productName("Oatmeal")
                 .userId(1L)
-                .nutriments(new NutrimentsDto())
+                .nutriments(NutrimentsDto.builder()
+                        .calories(BigDecimal.valueOf(5))
+                        .carbohydrates(BigDecimal.valueOf(6))
+                        .fat(BigDecimal.valueOf(7))
+                        .protein(BigDecimal.valueOf(8))
+                        .build())
+                .availableUnits(List.of(UnitType.GRAMS))
                 .build();
 
         String jsonRequest = objectMapper.writeValueAsString(IntakeRequestDto.builder()
                 .foodId("food-1")
-                .amount(100)
+                .amount(200)
                 .date(LocalDate.now())
+                .unitType(UnitType.GRAMS)
                 .intakePeriod(IntakePeriod.SNACK)
                 .build());
 
@@ -218,7 +232,6 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                 .usingRecursiveComparison()
                 .ignoringFields("id")
                 .isEqualTo(responseDto);
-
         verify(foodClientService).getFoodById("food-1");
     }
 
@@ -237,6 +250,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                 .productName("Oatmeal")
                 .userId(1L)
                 .nutriments(new NutrimentsDto())
+                .availableUnits(List.of(UnitType.GRAMS))
                 .build();
 
         when(redisTemplate.hasKey(anyString())).thenReturn(true);
@@ -274,6 +288,7 @@ class IntakeControllerTest extends AbstractIntegrationTest {
                 .id(globalFoodId)
                 .productName("Global Apple")
                 .userId(null)
+                .availableUnits(List.of(UnitType.GRAMS))
                 .nutriments(new NutrimentsDto())
                 .build();
 
@@ -308,18 +323,23 @@ class IntakeControllerTest extends AbstractIntegrationTest {
     void updateIntake_whenValidRequest_shouldUpdateIntake() throws Exception {
         // Given
         UpdateIntakeRequestDto requestDto = UpdateIntakeRequestDto.builder()
-                .amount(200)
+                .amount(20)
                 .intakePeriod(IntakePeriod.BREAKFAST)
                 .build();
         String requestJson = objectMapper.writeValueAsString(requestDto);
 
         Intake intake = getRandomIntakeFromDb();
-        IntakeUtils.recalculateExistingIntake(intake, 200);
+        intake.getNutriments().setCalories(BigDecimal.valueOf(100));
+        intake.getNutriments().setCarbohydrates(BigDecimal.valueOf(120));
+        intake.getNutriments().setFat(BigDecimal.valueOf(140));
+        intake.getNutriments().setProtein(BigDecimal.valueOf(160));
+
         IntakeResponseDto responseDto = IntakeResponseDto.builder()
                 .id(intake.getId())
                 .foodName("Potato")
                 .date(LocalDate.parse("2025-09-06"))
-                .amount(200)
+                .unitType(intake.getUnitType())
+                .amount(requestDto.getAmount())
                 .nutriments(nutrimentsMapper.toDto(intake.getNutriments()))
                 .intakePeriod(IntakePeriod.BREAKFAST)
                 .build();

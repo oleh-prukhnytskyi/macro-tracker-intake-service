@@ -1,6 +1,7 @@
 package com.olehprukhnytskyi.macrotrackerintakeservice.model;
 
 import com.olehprukhnytskyi.util.IntakePeriod;
+import com.olehprukhnytskyi.util.UnitType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -44,7 +45,13 @@ public class Intake {
     @Column(nullable = false)
     private LocalDate date;
 
+    @Column(nullable = false)
     private int amount;
+
+    @Builder.Default
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UnitType unitType = UnitType.GRAMS;
 
     @Builder.Default
     @Column(nullable = false)

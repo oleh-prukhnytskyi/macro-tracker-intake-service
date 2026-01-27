@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1769453769234-1
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: unit_type
+                  type: VARCHAR(255)
+            tableName: intake
+  - changeSet:
+      id: 1769453769234-2
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: unit_type
+            tableName: intake
+  - changeSet:
+      id: 1769453769234-3
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: unit_type
+                  type: VARCHAR(255)
+            tableName: meal_template_item
+  - changeSet:
+      id: 1769453769234-4
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: unit_type
+            tableName: meal_template_item

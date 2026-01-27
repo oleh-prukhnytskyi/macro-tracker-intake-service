@@ -23,6 +23,7 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
 import com.olehprukhnytskyi.macrotrackerintakeservice.util.CacheConstants;
 import com.olehprukhnytskyi.util.IntakePeriod;
+import com.olehprukhnytskyi.util.UnitType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -67,6 +68,7 @@ class IntakeServiceCacheTest extends AbstractIntegrationTest {
                         .fat(BigDecimal.valueOf(10))
                         .protein(BigDecimal.valueOf(5))
                         .build())
+                .availableUnits(List.of(UnitType.GRAMS))
                 .build();
         when(foodClientService.getFoodById(anyString())).thenReturn(foodDto);
         when(foodClientService.getFoodsByIds(anyList())).thenReturn(List.of(foodDto));

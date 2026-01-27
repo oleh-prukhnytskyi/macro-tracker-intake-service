@@ -1,0 +1,113 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1769455506265-1
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  defaultValueNumeric: !!float '0'
+                  name: calories_per_piece
+                  type: decimal
+              - column:
+                  defaultValueNumeric: !!float '0'
+                  name: carbohydrates_per_piece
+                  type: decimal
+              - column:
+                  defaultValueNumeric: !!float '0'
+                  name: fat_per_piece
+                  type: decimal
+              - column:
+                  defaultValueNumeric: !!float '0'
+                  name: protein_per_piece
+                  type: decimal
+            tableName: intake
+  - changeSet:
+      id: 1769455506265-2
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: calories_per_piece
+            tableName: intake
+  - changeSet:
+      id: 1769455506265-3
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  defaultValueNumeric: !!float '0'
+                  name: calories_per_piece
+                  type: decimal
+              - column:
+                  defaultValueNumeric: !!float '0'
+                  name: carbohydrates_per_piece
+                  type: decimal
+              - column:
+                  defaultValueNumeric: !!float '0'
+                  name: fat_per_piece
+                  type: decimal
+              - column:
+                  defaultValueNumeric: !!float '0'
+                  name: protein_per_piece
+                  type: decimal
+            tableName: meal_template_item
+  - changeSet:
+      id: 1769455506265-4
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: calories_per_piece
+            tableName: meal_template_item
+  - changeSet:
+      id: 1769455506265-6
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: carbohydrates_per_piece
+            tableName: intake
+  - changeSet:
+      id: 1769455506265-8
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: carbohydrates_per_piece
+            tableName: meal_template_item
+  - changeSet:
+      id: 1769455506265-10
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: fat_per_piece
+            tableName: intake
+  - changeSet:
+      id: 1769455506265-12
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: fat_per_piece
+            tableName: meal_template_item
+  - changeSet:
+      id: 1769455506265-14
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: protein_per_piece
+            tableName: intake
+  - changeSet:
+      id: 1769455506265-16
+      author: oleh.prukhnytskyi
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: protein_per_piece
+            tableName: meal_template_item

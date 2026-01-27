@@ -15,10 +15,16 @@ import com.olehprukhnytskyi.macrotrackerintakeservice.dto.FoodDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeRequestDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.dto.IntakeResponseDto;
 import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.IntakeMapper;
+import com.olehprukhnytskyi.macrotrackerintakeservice.mapper.NutrimentsMapper;
 import com.olehprukhnytskyi.macrotrackerintakeservice.model.Intake;
+import com.olehprukhnytskyi.macrotrackerintakeservice.model.Nutriments;
 import com.olehprukhnytskyi.macrotrackerintakeservice.repository.jpa.IntakeRepository;
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.strategy.GramsCalculationStrategy;
+import com.olehprukhnytskyi.macrotrackerintakeservice.service.strategy.NutrientStrategyFactory;
+import com.olehprukhnytskyi.util.UnitType;
 import feign.FeignException;
 import feign.Request;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +40,10 @@ class IntakeServiceTest {
     private IntakeRepository intakeRepository;
     @Mock
     private IntakeMapper intakeMapper;
+    @Mock
+    private NutrientStrategyFactory nutrientStrategyFactory;
+    @Mock
+    private NutrimentsMapper nutrimentsMapper;
 
     @InjectMocks
     private IntakeService intakeService;
@@ -48,6 +58,7 @@ class IntakeServiceTest {
         FoodDto foodDto = FoodDto.builder()
                 .id("food123")
                 .productName("Apple")
+                .availableUnits(List.of(UnitType.GRAMS))
                 .build();
 
         Intake intake = new Intake();
@@ -66,6 +77,9 @@ class IntakeServiceTest {
         }).when(intakeMapper).updateIntakeFromFoodDto(intake, foodDto);
         when(intakeRepository.save(intake)).thenReturn(savedIntake);
         when(intakeMapper.toDto(savedIntake)).thenReturn(responseDto);
+        when(nutrientStrategyFactory.getStrategy(UnitType.GRAMS))
+                .thenReturn(new GramsCalculationStrategy());
+        when(nutrimentsMapper.fromFoodNutriments(any())).thenReturn(new Nutriments());
 
         // When
         final IntakeResponseDto result = intakeService.save(requestDto, userId);
